@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="mobile-web-app-capable" content="yes">
-<title>말랑오목 v9.6 - 부엉이 AI 흑백 선택</title>
+<title>말랑오목 v9.7 - 난이도별 보상 · 무르기 보상 제한</title>
 <style>
 :root{--ink:#654533;--brown:#7a533e;--muted:#9e806a;--cream:#fff7e9;--card:#fffaf1;--line:#ead5b9;--pink:#f5a4a7;--green:#a4c9a0;--blue:#9bd3e5;--yellow:#f9d47e;--shadow:0 9px 25px #76553d19;--wood:#eec993;--grid:#b88455;--btnshadow:#8e5f46;font-family:ui-rounded,'Apple SD Gothic Neo','Noto Sans KR','Malgun Gothic',system-ui,sans-serif;color:var(--ink)}
 *{box-sizing:border-box}html{background:#fff5e7}body{margin:0;min-width:300px;min-height:100dvh;background:radial-gradient(ellipse at top left,#ffeacb 0,transparent 44%),radial-gradient(ellipse at bottom right,#e9f1d3 0,transparent 42%),#fff5e7;-webkit-font-smoothing:antialiased}button,input{font:inherit}button{cursor:pointer;color:inherit;touch-action:manipulation;-webkit-tap-highlight-color:transparent}button:focus-visible,input:focus-visible{outline:3px solid #86b5ad;outline-offset:3px}.app{width:min(100%,1100px);margin:auto;min-height:100dvh;padding:14px 24px 35px;position:relative}.app:before{content:'✿';pointer-events:none;position:fixed;right:-21px;top:20%;font-size:110px;color:#f8d3b7;opacity:.34;z-index:-1}.topbar{height:67px;display:flex;align-items:center;justify-content:space-between;gap:12px}.brand{display:flex;align-items:center;gap:8px;border:0;background:none;font-size:26px;font-weight:1000;letter-spacing:-1.7px;color:#73492f;text-shadow:1px 2px #fff;white-space:nowrap}.brand .leaf{display:inline-grid;place-items:center;width:38px;height:38px;border-radius:14px;background:#a8d4ab;border:2px solid #759b76;font-size:23px;box-shadow:0 3px #789e80}.top-actions{display:flex;align-items:center;gap:8px}.top-chip{border:2px solid #e8d4b5;border-radius:30px;background:#fffaf0;padding:9px 12px;font-size:13px;font-weight:900;box-shadow:0 3px #eddfc9}.top-chip .coin{color:#d89527}.iconbtn{width:43px;height:43px;border:2px solid #ebd7c0;border-radius:14px;background:#fffaf0;font-size:22px;box-shadow:0 3px #eddfc9}.view{display:none;animation:appear .25s ease}.view.active{display:block}@keyframes appear{from{opacity:.7;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
@@ -462,6 +462,11 @@ body.home-active .game-portrait{background-image:url("data:image/webp;base64,Ukl
 .ai-side-btn.selected{background:#e9f7e4;border-color:#74ad83;box-shadow:inset 0 0 0 1px #b2d3b5}
 .ai-side-btn:focus-visible{outline:3px solid #69a2d8;outline-offset:2px}
 .ai-side-hint{text-align:center;color:#997862;font-size:11px;line-height:1.5;margin:3px 0 6px}
+.ai-reward-preview{background:#fff4df;border:1.5px solid #ead1b4;border-radius:13px;padding:10px 12px;margin:12px 0 8px;color:#77533f;text-align:left;font-size:12px;line-height:1.65}
+.ai-reward-preview strong{color:#835437;font-size:13px}
+.ai-reward-preview .reward-warning{display:block;font-size:11px;margin-top:4px;color:#ae765a}
+.undo-reward-notice{font-size:11px;color:#9e775f;line-height:1.5;text-align:center;padding:7px 3px 0}
+.undo-reward-notice.disqualified{color:#bc665f;font-weight:900}
 </style>
 </head>
 <body class="onboarding-active">
@@ -525,9 +530,9 @@ body.home-active .game-portrait{background-image:url("data:image/webp;base64,Ukl
    </div>
    <div class="board-below"><span id="boardNotice">흑돌이 먼저 시작해요!</span><span id="moveCount">0수</span></div>
   </section>
-  <aside class="game-side"><section class="surface"><h3 class="side-title">🌷 지금 차례</h3><div class="turn-well"><span class="face" id="turnFace"></span><div><strong id="turnLabel">카피바라 차례</strong><small id="modeSub">AI 대전 · 보통</small></div></div><div class="action-grid"><button class="sm-btn" id="undoBtn">↶ 무르기</button><button class="sm-btn" id="resetGameBtn">↻ 다시하기</button><button class="sm-btn" id="forbiddenBtn">× 금수 표시 OFF</button><button class="sm-btn" id="rulesBtn">? 규칙</button></div></section>
+  <aside class="game-side"><section class="surface"><h3 class="side-title">🌷 지금 차례</h3><div class="turn-well"><span class="face" id="turnFace"></span><div><strong id="turnLabel">카피바라 차례</strong><small id="modeSub">AI 대전 · 보통</small></div></div><div class="action-grid"><button class="sm-btn" id="undoBtn">↶ 무르기</button><button class="sm-btn" id="resetGameBtn">↻ 다시하기</button><button class="sm-btn" id="forbiddenBtn">× 금수 표시 OFF</button><button class="sm-btn" id="rulesBtn">? 규칙</button></div><div class="undo-reward-notice" id="undoRewardNotice" hidden>AI 대전에서 무르기를 사용하면 해당 판의 코인·XP 보상은 0이에요.</div></section>
    <section class="surface"><h3 class="side-title">🍪 말랑오목 TIP</h3><p class="rules-box"><strong>흑돌</strong>은 33·44·장목 금수!<br><strong>백돌</strong>은 5목 이상이면 승리.<br>돌은 선의 교차점에 놓아요.<br><strong>착수 방법</strong>: 빈칸을 누른 후 ‘여기에 두기’로 확정!</p><div class="tipline">흑돌 금수는 33·44·장목 및 금수 예외를 검사해요. 공식 대회용 포석·색상 교환 규칙은 적용하지 않아요.</div></section>
-   <section class="surface"><h3 class="side-title">🌼 즐거운 한 판!</h3><p class="rules-box">말랑말랑한 동물돌을 누르면 톡! 게임이 끝난 뒤 AI 대전 보상으로 코인과 경험치를 모을 수 있어요.</p></section>
+   <section class="surface"><h3 class="side-title">🌼 즐거운 한 판!</h3><p class="rules-box">AI 난이도가 높을수록 코인과 경험치 보상이 커져요! 실제 무르기를 한 번이라도 사용한 판에는 보상이 지급되지 않아요.</p></section>
   </aside></div>
 </section>
 <section class="view" id="profileView">
@@ -540,7 +545,7 @@ body.home-active .game-portrait{background-image:url("data:image/webp;base64,Ukl
   <section class="surface shop-wrap"><h3 class="shop-tit">🐾 동물돌 스킨</h3><p class="animal-shop-intro">캐릭터를 한 번 구매하면 <strong>흑돌 + 백돌</strong> 모두 열려요. 마음에 드는 동물을 색상별로 따로 장착하세요!</p><div class="shop-grid" id="animalShop"></div><h3 class="shop-tit" style="margin-top:28px">🌼 오목판 스킨</h3><div class="shop-grid" id="boardShop"></div><p class="shop-note">🎁 카피바라와 토끼는 흑백돌 모두 무료예요. 구매 기록은 이 브라우저에 저장됩니다. 온라인 매칭과 현금 결제 기능은 아직 없어요.</p></section>
 </section>
 </main>
-<footer class="footer">말랑오목 v9.6 · 새 동물돌 12종 적용! · 온라인 매칭 준비 중 ♡</footer>
+<footer class="footer">말랑오목 v9.7 · 새 동물돌 12종 적용! · 온라인 매칭 준비 중 ♡</footer>
 </div>
 <div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><div class="dialog"><div class="art" id="dialogArt"></div><h2 id="dialogTitle">말랑오목</h2><p id="dialogText"></p><div id="dialogExtra"></div><div id="dialogButtons"></div></div></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -641,7 +646,15 @@ try{
 
 function persist(){try{localStorage.setItem(KEY,JSON.stringify(saved))}catch{}}
 function levelData(){let x=saved.xp||0,lev=1,need=100;while(x>=need&&lev<99){x-=need;lev++;need=100+35*(lev-1)}return{level:lev,into:x,need}}
-let game={board:Array(225).fill(0),turn:1,mode:'local',difficulty:'normal',playerColor:1,aiColor:2,history:[],ended:false,winners:[],isThinking:false,gameId:0,settled:false};
+const AI_REWARDS={
+ easy:{win:{coins:20,xp:60},loss:{coins:5,xp:15},draw:{coins:10,xp:30}},
+ normal:{win:{coins:35,xp:100},loss:{coins:12,xp:30},draw:{coins:20,xp:55}},
+ hard:{win:{coins:60,xp:170},loss:{coins:20,xp:50},draw:{coins:35,xp:90}}
+};
+const difficultyName={easy:'쉬움',normal:'보통',hard:'어려움'};
+function aiRewardFor(difficulty,result){return (AI_REWARDS[difficulty]||AI_REWARDS.normal)[result]}
+function aiRewardSummary(difficulty){const r=AI_REWARDS[difficulty]||AI_REWARDS.normal;return `<strong>${difficultyName[difficulty]||'보통'} 난이도 보상</strong><div>승리 ✦ ${r.win.coins}코인 · +${r.win.xp} XP</div><div>무승부 ✦ ${r.draw.coins}코인 · +${r.draw.xp} XP</div><div>패배 ✦ ${r.loss.coins}코인 · +${r.loss.xp} XP</div><span class="reward-warning">※ 실제 무르기 1회 이상 사용 시 승패와 관계없이 두 보상 모두 0</span>`}
+let game={board:Array(225).fill(0),turn:1,mode:'local',difficulty:'normal',playerColor:1,aiColor:2,history:[],ended:false,winners:[],isThinking:false,gameId:0,settled:false,usedUndo:false};
 let pendingMove=null;
 let toastTimeout;
 function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('visible');clearTimeout(toastTimeout);toastTimeout=setTimeout(()=>t.classList.remove('visible'),2500)}
@@ -653,9 +666,9 @@ function closeDialog(){$('overlay').classList.remove('show')}
 function askOnline(){openDialog({art:'capy',title:'랜덤 대전 준비 중!',text:'이 기능은 실제 Firebase 매칭 서버를 연결해야 사용할 수 있어요. 지금은 AI 대전이나 친구와 한 기기 대전을 즐길 수 있어요. 가짜 유저와 매칭되지는 않아요.',buttons:[{label:'AI 대전하기',run:()=>{closeDialog();pickAI()}},{label:'나중에 할래',alt:true,run:closeDialog}]})}
 function pickAI(){let diff='normal',playerColor=1;
  openDialog({art:'professorOwl',title:'부엉이 박사 AI 대전',text:'난이도와 내가 사용할 돌 색상을 골라주세요!',
- extra:`<div class="side-choice-caption">난이도 선택</div><div class="difficulty"><button type="button" data-diff="easy">쉬움</button><button type="button" class="selected" data-diff="normal">보통</button><button type="button" data-diff="hard">어려움</button></div><div class="side-choice-caption">내 돌 색상 선택</div><div class="ai-side-choices" role="group" aria-label="내 돌 색상"><button type="button" data-side="1" class="ai-side-btn selected" aria-pressed="true"><img src="${selectedStone(1).src}" alt="">흑돌 · 선공</button><button type="button" data-side="2" class="ai-side-btn" aria-pressed="false"><img src="${selectedStone(2).src}" alt="">백돌 · 후공</button></div><div class="ai-side-hint">백돌을 고르면 부엉이 박사가 흑돌로 먼저 시작해요.</div>`,
+ extra:`<div class="side-choice-caption">난이도 선택</div><div class="difficulty"><button type="button" data-diff="easy">쉬움</button><button type="button" class="selected" data-diff="normal">보통</button><button type="button" data-diff="hard">어려움</button></div><div class="side-choice-caption">내 돌 색상 선택</div><div class="ai-side-choices" role="group" aria-label="내 돌 색상"><button type="button" data-side="1" class="ai-side-btn selected" aria-pressed="true"><img src="${selectedStone(1).src}" alt="">흑돌 · 선공</button><button type="button" data-side="2" class="ai-side-btn" aria-pressed="false"><img src="${selectedStone(2).src}" alt="">백돌 · 후공</button></div><div class="ai-side-hint">백돌을 고르면 부엉이 박사가 흑돌로 먼저 시작해요.</div><div class="ai-reward-preview" id="aiRewardPreview" aria-live="polite">${aiRewardSummary(diff)}</div>`,
  buttons:[{label:'대국 시작!',run:()=>{closeDialog();startGame('ai',diff,playerColor)}},{label:'취소',alt:true,run:closeDialog}]});
- document.querySelectorAll('[data-diff]').forEach(btn=>btn.onclick=()=>{diff=btn.dataset.diff;document.querySelectorAll('[data-diff]').forEach(x=>x.classList.toggle('selected',x===btn))});
+ document.querySelectorAll('[data-diff]').forEach(btn=>btn.onclick=()=>{diff=btn.dataset.diff;document.querySelectorAll('[data-diff]').forEach(x=>x.classList.toggle('selected',x===btn));$('aiRewardPreview').innerHTML=aiRewardSummary(diff)});
  document.querySelectorAll('[data-side]').forEach(btn=>btn.onclick=()=>{playerColor=Number(btn.dataset.side);document.querySelectorAll('[data-side]').forEach(x=>{const selected=Number(x.dataset.side)===playerColor;x.classList.toggle('selected',selected);x.setAttribute('aria-pressed',String(selected))})});
 }
 function selectedStone(color){return stoneById[color===1?saved.selectedBlack:saved.selectedWhite]||stoneCatalog[(color===1?0:7)]}
@@ -666,7 +679,7 @@ function gameStoneId(color){return isAITurnStone(color)?('owl_'+(color===1?'blac
 function isAITurnStone(color){return game.mode==='ai'&&color===game.aiColor}
 function sideName(color){return isAITurnStone(color)?'부엉이 박사':stoneAnimalNameByColor(color)}
 function startGame(mode,difficulty='normal',playerColor=1){
- pendingMove=null;game.gameId++;game.board=Array(225).fill(0);game.history=[];game.turn=1;game.ended=false;game.winners=[];game.mode=mode;game.difficulty=difficulty;game.playerColor=mode==='ai'&&playerColor===2?2:1;game.aiColor=game.playerColor===1?2:1;game.settled=false;game.isThinking=false;
+ pendingMove=null;game.gameId++;game.board=Array(225).fill(0);game.history=[];game.turn=1;game.ended=false;game.winners=[];game.mode=mode;game.difficulty=difficulty;game.playerColor=mode==='ai'&&playerColor===2?2:1;game.aiColor=game.playerColor===1?2:1;game.settled=false;game.isThinking=false;game.usedUndo=false;
  $('gameTitle').textContent=mode==='ai'?'부엉이 박사 AI 대전':'친구와 한 기기 대전';
  $('modeSub').textContent=mode==='ai'?'AI 대전 · '+({easy:'쉬움',normal:'보통',hard:'어려움'}[difficulty])+' · '+(game.playerColor===1?'내가 흑돌':'내가 백돌'):'같은 기기 2인 대전';
  $('blackName').textContent=sideName(1)+(mode==='ai'?(game.playerColor===1?' · 나':' · AI'):' · '+saved.nickname);
@@ -807,6 +820,7 @@ function renderBoard(){const b=$('board');b.className='board theme-'+saved.theme
  $('turnLabel').textContent=game.ended?'대국 종료':(isAITurn()?'부엉이 박사':game.mode==='ai'?saved.nickname:game.turn===1?saved.nickname:sideName(2)+' 친구')+' 차례';
  $('playerBlack').classList.toggle('turn',game.turn===1&&!game.ended);$('playerWhite').classList.toggle('turn',game.turn===2&&!game.ended);$('moveCount').textContent=game.history.length+'수';
  $('undoBtn').disabled=(!pendingMove&&(game.mode==='ai'?game.history.length<(game.playerColor===2?3:2):game.history.length===0))||game.isThinking||game.ended;
+ const undoNotice=$('undoRewardNotice');undoNotice.hidden=game.mode!=='ai';undoNotice.classList.toggle('disqualified',game.mode==='ai'&&game.usedUndo);undoNotice.textContent=game.usedUndo?'이 판은 무르기 사용으로 코인·XP 보상이 0이에요.':'※ 실제 무르기 사용 시 해당 판의 코인·XP 보상은 0이에요.';
  const previewBox=$('moveConfirm');previewBox.hidden=!pendingMove;
  if(pendingMove){const [pr,pc]=pendingMove;$('pendingCoords').textContent=(pr+1)+'행 '+(pc+1)+'열';$('pendingAvatar').innerHTML=stoneSvg(game.turn)}$('forbiddenBtn').textContent='× 금수 표시 '+(saved.showForbidden?'ON':'OFF');$('boardNotice').textContent=pendingMove?'원하는 위치를 확인하고 착수해줘요!':game.ended?'대국이 끝났어요 ♡':game.isThinking?'부엉이 박사가 생각 중이에요…':game.mode==='ai'?(saved.nickname+' · '+(game.playerColor===1?'흑돌':'백돌')+' 차례'):(game.turn===1?saved.nickname:'상대')+' · '+sideName(game.turn)+' 차례';const last=game.history.at(-1),highlight=new Set(game.winners.map(([r,c])=>idx(r,c)));const showBad=saved.showForbidden&&game.turn===1&&!game.ended&&game.board.filter(v=>v===1).length>=4;
 for(let r=0;r<15;r++)for(let c=0;c<15;c++){const n=idx(r,c),cell=b.children[n],color=game.board[n];cell.className='cell';cell.replaceChildren();if([3,7,11].includes(r)&&[3,7,11].includes(c)){let s=document.createElement('span');s.className='star';cell.append(s)}if(color){const p=document.createElement('span');p.className='piece';p.innerHTML=stoneSvg(color);cell.append(p);cell.setAttribute('aria-label',`${r+1}행 ${c+1}열, ${color===1?'흑돌':'백돌'}`)}else{cell.setAttribute('aria-label',`${r+1}행 ${c+1}열, 빈칸`)}if(last&&last[0]===r&&last[1]===c){cell.classList.add('last','latest');const dot=document.createElement('i');dot.className='mark';cell.append(dot)}if(highlight.has(n))cell.classList.add('winning');
@@ -861,17 +875,24 @@ function undo(){
  if(game.ended||game.isThinking)return;
  const min=game.mode==='ai'?(game.playerColor===2?3:2):1;
  if(game.history.length<min)return;
+ if(game.mode==='ai')game.usedUndo=true;
  let n=game.mode==='ai'?2:1;
  while(n--&&game.history.length){const [r,c]=game.history.pop();game.board[idx(r,c)]=0}
- game.turn=game.history.length%2===0?1:2;game.winners=[];renderBoard();toast('한 수 무르기 완료!');
+ game.turn=game.history.length%2===0?1:2;game.winners=[];renderBoard();toast(game.mode==='ai'?'무르기 완료! 이번 판 코인·XP 보상은 0이에요.':'한 수 무르기 완료!');
 }
 function finish(color){
  let reward='',levelBefore=levelData().level;
  if(game.mode==='ai'&&!game.settled){
   game.settled=true;
-  if(color===game.playerColor){saved.wins++;saved.coins+=35;saved.xp+=100;reward='✦ 35 코인 · +100 XP'}
-  else if(color===game.aiColor){saved.losses++;saved.coins+=12;saved.xp+=30;reward='✦ 12 코인 · +30 XP'}
-  else{saved.draws++;saved.coins+=20;saved.xp+=55;reward='✦ 20 코인 · +55 XP'}
+  const result=color===game.playerColor?'win':color===game.aiColor?'loss':'draw';
+  if(result==='win')saved.wins++;else if(result==='loss')saved.losses++;else saved.draws++;
+  if(game.usedUndo){
+   reward='↶ 무르기 사용 · 코인 0 · XP 0 (승패 기록은 반영)';
+  }else{
+   const prize=aiRewardFor(game.difficulty,result);
+   saved.coins+=prize.coins;saved.xp+=prize.xp;
+   reward=`✦ ${prize.coins} 코인 · +${prize.xp} XP`;
+  }
   persist();updateTop();if(levelData().level>levelBefore)reward+=' · 레벨 업!'
  }else reward='친구 대전은 경험치·코인 지급 없음';
  const playerWin=game.mode==='ai'&&color===game.playerColor;
