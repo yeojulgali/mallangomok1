@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="mobile-web-app-capable" content="yes">
-<title>말랑오목 v9.7 - 난이도별 보상 · 무르기 보상 제한</title>
+<title>말랑오목 v9.8 - Firebase 클라우드 저장</title>
 <style>
 :root{--ink:#654533;--brown:#7a533e;--muted:#9e806a;--cream:#fff7e9;--card:#fffaf1;--line:#ead5b9;--pink:#f5a4a7;--green:#a4c9a0;--blue:#9bd3e5;--yellow:#f9d47e;--shadow:0 9px 25px #76553d19;--wood:#eec993;--grid:#b88455;--btnshadow:#8e5f46;font-family:ui-rounded,'Apple SD Gothic Neo','Noto Sans KR','Malgun Gothic',system-ui,sans-serif;color:var(--ink)}
 *{box-sizing:border-box}html{background:#fff5e7}body{margin:0;min-width:300px;min-height:100dvh;background:radial-gradient(ellipse at top left,#ffeacb 0,transparent 44%),radial-gradient(ellipse at bottom right,#e9f1d3 0,transparent 42%),#fff5e7;-webkit-font-smoothing:antialiased}button,input{font:inherit}button{cursor:pointer;color:inherit;touch-action:manipulation;-webkit-tap-highlight-color:transparent}button:focus-visible,input:focus-visible{outline:3px solid #86b5ad;outline-offset:3px}.app{width:min(100%,1100px);margin:auto;min-height:100dvh;padding:14px 24px 35px;position:relative}.app:before{content:'✿';pointer-events:none;position:fixed;right:-21px;top:20%;font-size:110px;color:#f8d3b7;opacity:.34;z-index:-1}.topbar{height:67px;display:flex;align-items:center;justify-content:space-between;gap:12px}.brand{display:flex;align-items:center;gap:8px;border:0;background:none;font-size:26px;font-weight:1000;letter-spacing:-1.7px;color:#73492f;text-shadow:1px 2px #fff;white-space:nowrap}.brand .leaf{display:inline-grid;place-items:center;width:38px;height:38px;border-radius:14px;background:#a8d4ab;border:2px solid #759b76;font-size:23px;box-shadow:0 3px #789e80}.top-actions{display:flex;align-items:center;gap:8px}.top-chip{border:2px solid #e8d4b5;border-radius:30px;background:#fffaf0;padding:9px 12px;font-size:13px;font-weight:900;box-shadow:0 3px #eddfc9}.top-chip .coin{color:#d89527}.iconbtn{width:43px;height:43px;border:2px solid #ebd7c0;border-radius:14px;background:#fffaf0;font-size:22px;box-shadow:0 3px #eddfc9}.view{display:none;animation:appear .25s ease}.view.active{display:block}@keyframes appear{from{opacity:.7;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
@@ -467,6 +467,11 @@ body.home-active .game-portrait{background-image:url("data:image/webp;base64,Ukl
 .ai-reward-preview .reward-warning{display:block;font-size:11px;margin-top:4px;color:#ae765a}
 .undo-reward-notice{font-size:11px;color:#9e775f;line-height:1.5;text-align:center;padding:7px 3px 0}
 .undo-reward-notice.disqualified{color:#bc665f;font-weight:900}
+/* v9.8: cloud sync state */
+.cloud-status{margin:3px auto 0!important;font-size:11px!important;color:#7d725c!important;font-weight:800!important;line-height:1.65}
+.cloud-status[data-state="synced"]{color:#587c63!important}
+.cloud-status[data-state="error"]{color:#ad685b!important}
+.cloud-status[data-state="saving"]{color:#956b46!important}
 </style>
 </head>
 <body class="onboarding-active">
@@ -491,7 +496,7 @@ body.home-active .game-portrait{background-image:url("data:image/webp;base64,Ukl
      <div id="avatarChoices" class="avatar-choices" role="group" aria-label="프로필 캐릭터 선택"></div>
      <div class="preview-line">선택한 친구 <span id="chosenName">카피바라</span> <span class="sparkle">✦</span></div>
      <button class="enter-button" id="setupComplete">말랑마을 입장하기 <span>→</span></button>
-     <p class="setup-footnote">회원가입 없이 시작해요. 기록은 이 기기의 브라우저에 저장돼요.<br>앱 데이터 삭제 시 기록이 사라질 수 있어요.</p>
+     <p class="setup-footnote">회원가입 없이 시작해요. 기본 기록은 기기에 저장되고, 연결되면 Firebase에도 백업돼요.<br>익명 계정은 브라우저 데이터 삭제·기기 변경 시 복구가 어려울 수 있어요.</p>
    </div>
   </div>
 </section>
@@ -516,7 +521,8 @@ body.home-active .game-portrait{background-image:url("data:image/webp;base64,Ukl
     </div>
     <div class="friends-caption">✿ 말랑마을의 여섯 친구들 ✿</div>
     <div class="friend-strip" id="friendStrip" aria-label="말랑오목 캐릭터"><span data-friend="capy"></span><span data-friend="bunny"></span><span data-friend="cat"></span><span data-friend="penguin"></span><span data-friend="panda"></span><span data-friend="fox"></span></div>
-    <p class="little-print">랜덤 온라인 대전은 서버 연결 후 이용할 수 있어요</p>
+    <p class="little-print">랜덤 온라인 대전은 매칭 기능 완성 후 이용할 수 있어요</p>
+    <p class="little-print cloud-status" id="cloudStatus" role="status" aria-live="polite">☁ 클라우드 연결 중…</p>
    </div>
  </div>
 </section>
@@ -536,7 +542,7 @@ body.home-active .game-portrait{background-image:url("data:image/webp;base64,Ukl
   </aside></div>
 </section>
 <section class="view" id="profileView">
- <div class="page-heading"><button class="backbtn" data-home>← 메인</button><h2>내 정보</h2><span class="soft-tag">내 기기에 저장</span></div>
+ <div class="page-heading"><button class="backbtn" data-home>← 메인</button><h2>내 정보</h2><span class="soft-tag" id="profileCloudBadge">클라우드 연결 중</span></div>
  <div class="profile-grid"><section class="surface profile-card"><div class="profile-identity"><div class="profile-bigface" id="profileFace"></div><div><h3 id="profileName">말랑카피</h3><strong id="profileLevel">Lv.1 새싹 오목러</strong><br><small>오늘도 말랑말랑한 하루!</small></div></div><div class="progress"><span id="xpBar" style="width:0%"></span></div><div class="xp-info"><span>경험치</span><span id="profileXP">0 / 100 XP</span></div><div class="avatar-change-row"><span>내 대표 캐릭터</span><button id="editAvatar" class="profile-pick-button">캐릭터 바꾸기 →</button></div><input class="profile-input" id="nicknameInput" maxlength="10" placeholder="닉네임 (최대 10자)" aria-label="닉네임"><button class="save-name" id="saveNickname">닉네임 저장</button></section>
   <section class="surface stat-card"><h3>🏆 나의 전적</h3><div class="stats-grid"><div class="stat-number"><strong id="statWin">0</strong><small>AI 승리</small></div><div class="stat-number"><strong id="statLoss">0</strong><small>AI 패배</small></div><div class="stat-number"><strong id="statRate">0%</strong><small>승률</small></div></div><p class="muted-note">총 <span id="statGames">0</span>번 대국했어요. 보상은 AI 대국 완료 시에만 지급돼요. 데이터는 현재 브라우저에만 저장되며, 기기를 바꾸면 자동으로 이전되지 않아요.</p><button class="save-name" id="toShopFromProfile">꾸미기 상점 가기 →</button></section></div>
 </section>
@@ -644,7 +650,61 @@ try{
  saved.ownedWhite=saved.ownedAnimals.map(x=>x+'_white');
 }catch(e){console.warn('저장 기록을 읽지 못했습니다.',e)}
 
-function persist(){try{localStorage.setItem(KEY,JSON.stringify(saved))}catch{}}
+const SYNC_PENDING_KEY='mallangomok-save-v1-cloud-pending';
+function persist(fromCloud=false){
+ try{
+  localStorage.setItem(KEY,JSON.stringify(saved));
+  if(!fromCloud){
+   const record={uid:window.mallangFirebaseUserId||null,modifiedAt:Date.now(),save:JSON.parse(JSON.stringify(saved))};
+   localStorage.setItem(SYNC_PENDING_KEY,JSON.stringify(record));
+   if(window.mallangCloudBridge && typeof window.mallangCloudBridge.onChanged==='function')window.mallangCloudBridge.onChanged();
+  }
+ }catch(e){console.warn('로컬 데이터 저장 실패',e)}
+}
+function normalizeCloudSave(input){
+ if(!input||typeof input!=='object'||Array.isArray(input))return null;
+ const v={...defaultSave(),...input};
+ const asNum=(value)=>Number.isFinite(Number(value))?Math.min(100000000,Math.max(0,Math.floor(Number(value)))):0;
+ for(const k of ['xp','coins','wins','losses','draws'])v[k]=asNum(v[k]);
+ v.nickname=String(v.nickname||'말랑카피').trim().slice(0,10)||'말랑카피';
+ v.profileAvatar=pieces[v.profileAvatar]?v.profileAvatar:'capy';
+ v.onboarded=!!v.onboarded;
+ const own=new Set(['capybara','rabbit']);
+ if(Array.isArray(v.ownedAnimals))for(const id of v.ownedAnimals)if(animalById[id])own.add(id);
+ v.ownedAnimals=[...own];
+ v.ownedBlack=v.ownedAnimals.map(id=>id+'_black');
+ v.ownedWhite=v.ownedAnimals.map(id=>id+'_white');
+ const boards=new Set(['wood']);
+ if(Array.isArray(v.ownedBoards))for(const id of v.ownedBoards)if(boardCatalog.some(b=>b.id===id))boards.add(id);
+ v.ownedBoards=[...boards];
+ if(!boards.has(v.theme))v.theme='wood';
+ if(!v.ownedBlack.includes(v.selectedBlack))v.selectedBlack='capybara_black';
+ if(!v.ownedWhite.includes(v.selectedWhite))v.selectedWhite='rabbit_white';
+ v.sound=!!v.sound;v.showForbidden=!!v.showForbidden;
+ return v;
+}
+function setCloudStatus(message,state){
+ const label=document.getElementById('cloudStatus');
+ if(label){label.textContent=message;label.dataset.state=state||'';}
+ const badge=document.getElementById('profileCloudBadge');
+ if(badge)badge.textContent=state==='synced'?'☁ 클라우드 저장됨':state==='error'?'⚠ 로컬 저장 중':state==='saving'?'☁ 동기화 중':'☁ 연결 중';
+ const dialogLabel=document.getElementById('settingsCloudStatus');
+ if(dialogLabel)dialogLabel.textContent=message;
+}
+window.mallangCloudBridge={
+ getSave:()=>JSON.parse(JSON.stringify(saved)),
+ applySave:(value)=>{
+  const clean=normalizeCloudSave(value);if(!clean)return false;
+  saved=clean;persist(true);updateTop();renderHome();renderShop();
+  if(document.getElementById('profileView').classList.contains('active'))renderProfile();
+  if(document.getElementById('gameView').classList.contains('active'))renderBoard();
+  if(document.getElementById('onboardingView').classList.contains('active')&&saved.onboarded)display('home');
+  return true;
+ },
+ status:setCloudStatus,
+ onChanged:null,
+ pendingKey:SYNC_PENDING_KEY
+};
 function levelData(){let x=saved.xp||0,lev=1,need=100;while(x>=need&&lev<99){x-=need;lev++;need=100+35*(lev-1)}return{level:lev,into:x,need}}
 const AI_REWARDS={
  easy:{win:{coins:20,xp:60},loss:{coins:5,xp:15},draw:{coins:10,xp:30}},
@@ -947,7 +1007,7 @@ function createAnimalCard(animal){
 }
 function createBoardCard(cat){const owned=saved.ownedBoards.includes(cat.id),chosen=saved.theme===cat.id;const wrap=document.createElement('article');wrap.className='shop-card'+(chosen?' active':'');wrap.innerHTML='<div class="board-sample '+(cat.id==='wood'?'':cat.id)+'"></div><h4>'+cat.name+'</h4><small>'+cat.desc+'</small>';const b=document.createElement('button');b.textContent=chosen?'✓ 사용 중':owned?'사용하기':'✦ '+cat.price+' 코인';b.onclick=()=>{if(chosen)return;if(!owned){if(saved.coins<cat.price){toast('코인이 부족해요! AI 대전을 즐겨보세요.');return}saved.coins-=cat.price;saved.ownedBoards.push(cat.id)}saved.theme=cat.id;persist();updateTop();renderShop();if($('gameView').classList.contains('active'))renderBoard();toast(owned?'오목판을 변경했어요!':'구매했어요! ✿')};wrap.append(b);return wrap}
 function renderShop(){$('animalShop').replaceChildren(...animalCatalog.map(createAnimalCard));$('boardShop').replaceChildren(...boardCatalog.map(createBoardCard));$('shopCoinInfo').textContent='✦ '+saved.coins+' 코인'}
-function settings(){openDialog({art:'🌷',title:'환경 설정',text:'말랑오목 플레이 설정',extra:`<div class="settings-row"><span>착수 효과음</span><button id="soundToggle">${saved.sound?'켜짐':'꺼짐'}</button></div><div class="settings-row"><span>흑돌 금수 표시</span><button id="showForbiddenToggle">${saved.showForbidden?'켜짐':'꺼짐'}</button></div>`,buttons:[{label:'완료',run:()=>{closeDialog();if($('gameView').classList.contains('active'))renderBoard()}}]});$('soundToggle').onclick=()=>{saved.sound=!saved.sound;persist();$('soundToggle').textContent=saved.sound?'켜짐':'꺼짐'};$('showForbiddenToggle').onclick=()=>{saved.showForbidden=!saved.showForbidden;persist();$('showForbiddenToggle').textContent=saved.showForbidden?'켜짐':'꺼짐'}}
+function settings(){openDialog({art:'🌷',title:'환경 설정',text:'말랑오목 플레이 설정',extra:`<div class="settings-row"><span>착수 효과음</span><button id="soundToggle">${saved.sound?'켜짐':'꺼짐'}</button></div><div class="settings-row"><span>흑돌 금수 표시</span><button id="showForbiddenToggle">${saved.showForbidden?'켜짐':'꺼짐'}</button></div><div class="settings-row"><span>클라우드 저장</span><span id="settingsCloudStatus" style="font-size:12px;color:#75846a">연결 확인 중…</span></div>`,buttons:[{label:'완료',run:()=>{closeDialog();if($('gameView').classList.contains('active'))renderBoard()}}]});$('soundToggle').onclick=()=>{saved.sound=!saved.sound;persist();$('soundToggle').textContent=saved.sound?'켜짐':'꺼짐'};$('showForbiddenToggle').onclick=()=>{saved.showForbidden=!saved.showForbidden;persist();$('showForbiddenToggle').textContent=saved.showForbidden?'켜짐':'꺼짐'}}
 function rules(){openDialog({art:'capy',title:'렌주룰 안내',text:'15×15 오목판에서 번갈아 한 수씩 두어요. 흑돌은 정확히 5개를 이으면 승리, 백돌은 5개 이상 이어도 승리해요. 흑돌의 33·44·6목 이상 금수는 둘 수 없어요. 33은 실제로 합법적인 열린4로 이어지는지 확인해요. 복잡한 금수 예외도 재귀적으로 검사합니다. 공식 대회용 포석·색상 교환은 아직 적용하지 않았어요.',buttons:[{label:'알겠어요!',run:closeDialog}]})}
 function home(){pendingMove=null;game.gameId++;game.isThinking=false;closeDialog();display('home')}
 
@@ -993,7 +1053,108 @@ $('homePlayer').onclick=()=>display('profile');$('editAvatar').onclick=()=>setup
 
 $('homeGear').onclick=settings;$('homeGearBottom').onclick=settings;$('homeInbox').onclick=()=>openDialog({art:'🌸',title:'말랑 우편함',text:'말랑오목에 오신 것을 환영해요! 캐릭터 하나를 구매하면 흑돌과 백돌이 둘 다 열려요. AI 대전과 꾸미기를 즐겨보세요. 온라인 랜덤 매칭은 아직 준비 중이에요.',buttons:[{label:'확인',run:closeDialog}]});$('profileHomeBtn').onclick=()=>display('profile');$('brandBtn').onclick=home;document.querySelectorAll('[data-home]').forEach(b=>b.onclick=home);$('coinChip').onclick=()=>display('shop');$('levelChip').onclick=()=>display('profile');$('settingBtn').onclick=settings;$('randomBtn').onclick=askOnline;$('twoPlayerBtn').onclick=()=>startGame('local');$('confirmMove').onclick=commitPreview;$('cancelMove').onclick=cancelPreview;$('aiBtn').onclick=pickAI;$('localBtn').onclick=rules;$('shopBtn').onclick=()=>display('shop');$('gameBack').onclick=()=>openDialog({art:'bunny',title:'대국을 나갈까요?',text:'진행 중인 대국은 저장되지 않아요.',buttons:[{label:'계속 두기',run:closeDialog},{label:'메인으로 나가기',alt:true,run:home}]});$('rulesBtn').onclick=rules;$('resetGameBtn').onclick=()=>openDialog({art:'🌱',title:'새 대국을 시작할까요?',text:'현재 대국은 초기화되고 보상은 지급되지 않아요.',buttons:[{label:'새 대국 시작',run:()=>{closeDialog();startGame(game.mode,game.difficulty,game.playerColor)}},{label:'계속하기',alt:true,run:closeDialog}]});$('undoBtn').onclick=undo;$('forbiddenBtn').onclick=()=>{saved.showForbidden=!saved.showForbidden;persist();renderBoard()};$('saveNickname').onclick=()=>{const nick=$('nicknameInput').value.trim();if(!nick){toast('닉네임을 입력해주세요!');return}saved.nickname=nick.slice(0,10);persist();renderProfile();toast('닉네임이 저장됐어요 ♡')};$('toShopFromProfile').onclick=()=>display('shop');$('overlay').addEventListener('click',e=>{if(e.target===$('overlay'))closeDialog()});
 buildBoard();updateTop();renderShop();renderHome();if(saved.onboarded)display('home');else setupProfile(false);
+window.mallangCloudBridge.status('☁ Firebase 연결 중…','connecting');
 })();
+</script>
+<script type="module">
+/* Firebase v9.8 prototype: anonymous auth + per-user Firestore profile backup.
+ * Online matchmaking and authoritative rewards are separate future features.
+ * Existing localStorage data is never removed by this module.
+ */
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js';
+import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
+import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js';
+
+const config = {
+  apiKey: 'AIzaSyD6MjFijJcn10rWY3bjOdUpnNQqHZ5piAM',
+  authDomain: 'mallangomok.firebaseapp.com',
+  projectId: 'mallangomok',
+  storageBucket: 'mallangomok.firebasestorage.app',
+  messagingSenderId: '707020989744',
+  appId: '1:707020989744:web:07a13e641d1193f67d94f5'
+};
+const bridge=window.mallangCloudBridge;
+if(!bridge)throw new Error('말랑오목 저장 시스템을 찾을 수 없습니다.');
+let uid=null,documentRef=null,ready=false,writeTimer=null,writing=false;
+const status=(msg,kind)=>bridge.status(msg,kind);
+const pendingKey=bridge.pendingKey;
+function pending(){
+ try {const value=JSON.parse(localStorage.getItem(pendingKey)||'null');return value&&typeof value==='object'?value:null;}
+ catch{return null;}
+}
+function clearPending(record){
+ const latest=pending();
+ if(latest&&latest.modifiedAt===record.modifiedAt&&latest.uid===record.uid){
+  try{localStorage.removeItem(pendingKey)}catch{}
+ }
+}
+function schedule(delay=700){
+ if(!ready)return;
+ if(writeTimer)clearTimeout(writeTimer);
+ writeTimer=setTimeout(()=>{writeTimer=null;void flush();},delay);
+}
+async function flush(){
+ if(!ready||!documentRef||writing)return;
+ const change=pending();
+ if(!change){status('☁ 클라우드에 저장됨','synced');return;}
+ if(change.uid&&change.uid!==uid){status('⚠ 다른 계정의 저장 기록이 남아 있어요','error');return;}
+ writing=true;
+ status('☁ 클라우드에 저장 중…','saving');
+ try{
+  const record={...change,uid};
+  await setDoc(documentRef,{save:record.save,schemaVersion:1,updatedAt:serverTimestamp()});
+  clearPending(change);
+  if(pending())schedule(100); else status('☁ 클라우드에 저장됨','synced');
+ }catch(err){
+  console.warn('Firestore 저장 실패',err);
+  status('⚠ 클라우드 저장 실패 · 기기에 기록 보관 중','error');
+ }finally{writing=false; if(pending()&&navigator.onLine)schedule(2500);}
+}
+bridge.onChanged=()=>{status('☁ 변경 내용 저장 대기…','saving');schedule();};
+window.addEventListener('online',()=>schedule(300));
+window.addEventListener('pagehide',()=>{if(writeTimer){clearTimeout(writeTimer);writeTimer=null;}if(ready)void flush();});
+try{
+ status('☁ 익명 계정 인증 중…','connecting');
+ const app=initializeApp(config);
+ const auth=getAuth(app);
+ const db=getFirestore(app);
+ await auth.authStateReady();
+ const user=auth.currentUser||(await signInAnonymously(auth)).user;
+ uid=user.uid;
+ window.mallangFirebaseUserId=uid;
+ documentRef=doc(db,'users',uid);
+ status('☁ 저장 기록 확인 중…','connecting');
+ const remote=await getDoc(documentRef);
+ let localPending=pending();
+ if(remote.exists()){
+  // A local unsynced edit made by this exact account wins; otherwise cloud is source of truth.
+  if(localPending&&localPending.uid===uid){
+   bridge.applySave(localPending.save);
+  }else{
+   bridge.applySave(remote.data().save);
+   if(localPending&&localPending.uid!==uid){
+    // Keep an unrelated pending record untouched for manual recovery.
+    status('⚠ 이전 계정의 미전송 기록이 있어요','error');
+   }
+  }
+ }else{
+  // Import existing local v9.7 save on first Firebase login.
+  const source=bridge.getSave();
+  const newRecord={uid,modifiedAt:Date.now(),save:source};
+  try{localStorage.setItem(pendingKey,JSON.stringify(newRecord))}catch{}
+ }
+ // If user changed their profile during the initial async load, do not discard that edit.
+ localPending=pending();
+ if(localPending&&localPending.uid===null){
+  try{localStorage.setItem(pendingKey,JSON.stringify({...localPending,uid}))}catch{}
+ }
+ ready=true;
+ status('☁ 클라우드 연결됨','synced');
+ schedule(80);
+}catch(err){
+ console.warn('Firebase 초기화 실패',err);
+ status('⚠ Firebase 연결 실패 · 기기에는 계속 저장돼요','error');
+}
 </script>
 </body>
 </html>
