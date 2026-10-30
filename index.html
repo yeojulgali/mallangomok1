@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="mobile-web-app-capable" content="yes">
-<title>말랑오목 v9.8 - Firebase 클라우드 저장</title>
+<title>말랑오목 v9.8.1 - Firebase 연결 진단</title>
 <style>
 :root{--ink:#654533;--brown:#7a533e;--muted:#9e806a;--cream:#fff7e9;--card:#fffaf1;--line:#ead5b9;--pink:#f5a4a7;--green:#a4c9a0;--blue:#9bd3e5;--yellow:#f9d47e;--shadow:0 9px 25px #76553d19;--wood:#eec993;--grid:#b88455;--btnshadow:#8e5f46;font-family:ui-rounded,'Apple SD Gothic Neo','Noto Sans KR','Malgun Gothic',system-ui,sans-serif;color:var(--ink)}
 *{box-sizing:border-box}html{background:#fff5e7}body{margin:0;min-width:300px;min-height:100dvh;background:radial-gradient(ellipse at top left,#ffeacb 0,transparent 44%),radial-gradient(ellipse at bottom right,#e9f1d3 0,transparent 42%),#fff5e7;-webkit-font-smoothing:antialiased}button,input{font:inherit}button{cursor:pointer;color:inherit;touch-action:manipulation;-webkit-tap-highlight-color:transparent}button:focus-visible,input:focus-visible{outline:3px solid #86b5ad;outline-offset:3px}.app{width:min(100%,1100px);margin:auto;min-height:100dvh;padding:14px 24px 35px;position:relative}.app:before{content:'✿';pointer-events:none;position:fixed;right:-21px;top:20%;font-size:110px;color:#f8d3b7;opacity:.34;z-index:-1}.topbar{height:67px;display:flex;align-items:center;justify-content:space-between;gap:12px}.brand{display:flex;align-items:center;gap:8px;border:0;background:none;font-size:26px;font-weight:1000;letter-spacing:-1.7px;color:#73492f;text-shadow:1px 2px #fff;white-space:nowrap}.brand .leaf{display:inline-grid;place-items:center;width:38px;height:38px;border-radius:14px;background:#a8d4ab;border:2px solid #759b76;font-size:23px;box-shadow:0 3px #789e80}.top-actions{display:flex;align-items:center;gap:8px}.top-chip{border:2px solid #e8d4b5;border-radius:30px;background:#fffaf0;padding:9px 12px;font-size:13px;font-weight:900;box-shadow:0 3px #eddfc9}.top-chip .coin{color:#d89527}.iconbtn{width:43px;height:43px;border:2px solid #ebd7c0;border-radius:14px;background:#fffaf0;font-size:22px;box-shadow:0 3px #eddfc9}.view{display:none;animation:appear .25s ease}.view.active{display:block}@keyframes appear{from{opacity:.7;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
@@ -1057,104 +1057,179 @@ window.mallangCloudBridge.status('☁ Firebase 연결 중…','connecting');
 })();
 </script>
 <script type="module">
-/* Firebase v9.8 prototype: anonymous auth + per-user Firestore profile backup.
- * Online matchmaking and authoritative rewards are separate future features.
- * Existing localStorage data is never removed by this module.
- */
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js';
-import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
-import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js';
-
-const config = {
-  apiKey: 'AIzaSyD6MjFijJcn10rWY3bjOdUpnNQqHZ5piAM',
-  authDomain: 'mallangomok.firebaseapp.com',
-  projectId: 'mallangomok',
-  storageBucket: 'mallangomok.firebasestorage.app',
-  messagingSenderId: '707020989744',
-  appId: '1:707020989744:web:07a13e641d1193f67d94f5'
+/* Mallang Omok v9.8.1: diagnostics + resilient auth/cloud sync.
+   This is a browser-side profile backup. Online matchmaking and server-validated
+   coins/XP have NOT been implemented. Local records are never deleted on error. */
+const bridge = window.mallangCloudBridge;
+const label = document.getElementById('cloudStatus');
+const status = (msg, state) => bridge?.status(msg, state);
+const pendingKey = bridge?.pendingKey;
+const errors = {
+  'auth/operation-not-allowed': 'Firebase Authentication에서 익명 로그인을 켜주세요',
+  'auth/invalid-api-key': 'Firebase 웹앱 API 키를 다시 확인해주세요',
+  'auth/unauthorized-domain': 'Authentication 승인된 도메인을 확인해주세요',
+  'auth/network-request-failed': '네트워크, 광고 차단 프로그램 또는 방화벽을 확인해주세요',
+  'auth/too-many-requests': '인증 요청이 많습니다. 잠시 후 다시 시도해주세요',
+  'permission-denied': 'Firestore 보안 규칙의 users/{userId} 접근 권한을 확인해주세요',
+  'unavailable': 'Firestore 서버 또는 인터넷 연결 상태를 확인해주세요',
+  'deadline-exceeded': '서버 응답이 늦습니다. 다시 시도해주세요',
+  'failed-precondition': 'Firestore 데이터베이스 및 구성 설정을 확인해주세요'
 };
-const bridge=window.mallangCloudBridge;
-if(!bridge)throw new Error('말랑오목 저장 시스템을 찾을 수 없습니다.');
-let uid=null,documentRef=null,ready=false,writeTimer=null,writing=false;
-const status=(msg,kind)=>bridge.status(msg,kind);
-const pendingKey=bridge.pendingKey;
-function pending(){
- try {const value=JSON.parse(localStorage.getItem(pendingKey)||'null');return value&&typeof value==='object'?value:null;}
- catch{return null;}
+let ready = false, uid = null, ref = null, busy = false, timer = null;
+let lastError = null;
+function errorInfo(stage, err) {
+  const code = String(err?.code || (err?.name === 'TypeError' ? 'network-or-sdk' : 'unknown'));
+  const hint = errors[code] || String(err?.message || '개발자 콘솔에서 오류 상세 확인').slice(0,140);
+  lastError = { stage, code, message: String(err?.message || ''), hint, when: new Date().toISOString() };
+  window.mallangFirebaseLastError = lastError;
+  console.error('[말랑오목 Firebase]',stage,code,err);
+  status(`⚠ ${stage} 실패 (${code}) · ${hint} · 기기 저장 유지`, 'error');
 }
-function clearPending(record){
- const latest=pending();
- if(latest&&latest.modifiedAt===record.modifiedAt&&latest.uid===record.uid){
-  try{localStorage.removeItem(pendingKey)}catch{}
- }
+function pending() {
+  try {
+    const data = JSON.parse(localStorage.getItem(pendingKey) || 'null');
+    return data && typeof data === 'object' && !Array.isArray(data) ? data : null;
+  } catch { return null; }
 }
-function schedule(delay=700){
- if(!ready)return;
- if(writeTimer)clearTimeout(writeTimer);
- writeTimer=setTimeout(()=>{writeTimer=null;void flush();},delay);
+function updatePending(data) {
+  try { localStorage.setItem(pendingKey, JSON.stringify(data)); return true; }
+  catch(e) { errorInfo('로컬 저장',e); return false; }
 }
-async function flush(){
- if(!ready||!documentRef||writing)return;
- const change=pending();
- if(!change){status('☁ 클라우드에 저장됨','synced');return;}
- if(change.uid&&change.uid!==uid){status('⚠ 다른 계정의 저장 기록이 남아 있어요','error');return;}
- writing=true;
- status('☁ 클라우드에 저장 중…','saving');
- try{
-  const record={...change,uid};
-  await setDoc(documentRef,{save:record.save,schemaVersion:1,updatedAt:serverTimestamp()});
-  clearPending(change);
-  if(pending())schedule(100); else status('☁ 클라우드에 저장됨','synced');
- }catch(err){
-  console.warn('Firestore 저장 실패',err);
-  status('⚠ 클라우드 저장 실패 · 기기에 기록 보관 중','error');
- }finally{writing=false; if(pending()&&navigator.onLine)schedule(2500);}
-}
-bridge.onChanged=()=>{status('☁ 변경 내용 저장 대기…','saving');schedule();};
-window.addEventListener('online',()=>schedule(300));
-window.addEventListener('pagehide',()=>{if(writeTimer){clearTimeout(writeTimer);writeTimer=null;}if(ready)void flush();});
-try{
- status('☁ 익명 계정 인증 중…','connecting');
- const app=initializeApp(config);
- const auth=getAuth(app);
- const db=getFirestore(app);
- await auth.authStateReady();
- const user=auth.currentUser||(await signInAnonymously(auth)).user;
- uid=user.uid;
- window.mallangFirebaseUserId=uid;
- documentRef=doc(db,'users',uid);
- status('☁ 저장 기록 확인 중…','connecting');
- const remote=await getDoc(documentRef);
- let localPending=pending();
- if(remote.exists()){
-  // A local unsynced edit made by this exact account wins; otherwise cloud is source of truth.
-  if(localPending&&localPending.uid===uid){
-   bridge.applySave(localPending.save);
-  }else{
-   bridge.applySave(remote.data().save);
-   if(localPending&&localPending.uid!==uid){
-    // Keep an unrelated pending record untouched for manual recovery.
-    status('⚠ 이전 계정의 미전송 기록이 있어요','error');
-   }
+function clearPending(record) {
+  const now = pending();
+  if(now && now.modifiedAt===record.modifiedAt && now.uid===record.uid) {
+    try { localStorage.removeItem(pendingKey); } catch(e) {console.warn('대기 기록을 지우지 못함',e);}
   }
- }else{
-  // Import existing local v9.7 save on first Firebase login.
-  const source=bridge.getSave();
-  const newRecord={uid,modifiedAt:Date.now(),save:source};
-  try{localStorage.setItem(pendingKey,JSON.stringify(newRecord))}catch{}
- }
- // If user changed their profile during the initial async load, do not discard that edit.
- localPending=pending();
- if(localPending&&localPending.uid===null){
-  try{localStorage.setItem(pendingKey,JSON.stringify({...localPending,uid}))}catch{}
- }
- ready=true;
- status('☁ 클라우드 연결됨','synced');
- schedule(80);
-}catch(err){
- console.warn('Firebase 초기화 실패',err);
- status('⚠ Firebase 연결 실패 · 기기에는 계속 저장돼요','error');
 }
+function schedule(ms = 800) {
+  if(!ready) return;
+  if(timer) clearTimeout(timer);
+  timer = setTimeout(() => { timer=null; void flush(); },ms);
+}
+async function flush() {
+  if(!ready || !ref || busy) return;
+  const record = pending();
+  if(!record) { status('☁ 클라우드에 저장됨','synced'); return; }
+  if(record.uid && record.uid !== uid) {
+    status('⚠ 다른 익명 계정의 저장 대기 데이터가 있습니다. 자동 덮어쓰기를 중단했습니다','error');
+    return;
+  }
+  busy = true;
+  status('☁ 클라우드에 저장 중…','saving');
+  try {
+    await dbApi.setDoc(ref,{save:record.save,schemaVersion:1,updatedAt:dbApi.serverTimestamp()});
+    clearPending(record);
+    if(pending()) schedule(150);
+    else status('☁ 클라우드에 저장됨','synced');
+  } catch(e) {
+    errorInfo('Firestore 저장',e);
+    // Keep the pending record in localStorage. Do not blindly retry permission errors.
+    if(['unavailable','deadline-exceeded'].includes(e?.code)) schedule(10000);
+  } finally { busy = false; }
+}
+let dbApi;
+bridge.onChanged = () => {
+  status('☁ 변경 내용 저장 대기…','saving');
+  schedule();
+};
+window.addEventListener('online',()=>{ if(ready) schedule(400); });
+window.addEventListener('pagehide',()=>{if(timer){clearTimeout(timer);timer=null;} if(ready) void flush();});
+if(label) {
+  label.title = '오류가 보일 때 누르면 클라우드 연결을 다시 시도합니다';
+  label.setAttribute('role','button');
+  label.setAttribute('tabindex','0');
+  label.style.cursor = 'pointer';
+  function retryAction() { if(ready) schedule(0); else void connect(); }
+  label.addEventListener('click',retryAction);
+  label.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();retryAction();}});
+}
+const wait = ms=>new Promise(resolve=>setTimeout(resolve,ms));
+let connecting=false,authInstance=null;
+async function connect() {
+  if(connecting) return;
+  connecting=true;
+  let stage='Firebase 라이브러리';
+  try {
+    if(!bridge) throw new Error('게임 저장 연결고리가 초기화되지 않았습니다');
+    status('☁ Firebase 라이브러리 준비 중…','connecting');
+    // Catch import failures as well, instead of leaving the UI stuck in 'connecting'.
+    if(!dbApi) {
+      const version='12.19.0';
+      const [appMod,authMod,storeMod] = await Promise.all([
+        import(`https://www.gstatic.com/firebasejs/${version}/firebase-app.js`),
+        import(`https://www.gstatic.com/firebasejs/${version}/firebase-auth.js`),
+        import(`https://www.gstatic.com/firebasejs/${version}/firebase-firestore.js`)
+      ]);
+      const config = {
+        apiKey:'AIzaSyD6MjF1jJcn10rWY3bjOdUpnNQqHZ5piAM',
+        authDomain:'mallangomok.firebaseapp.com',
+        projectId:'mallangomok',
+        storageBucket:'mallangomok.firebasestorage.app',
+        messagingSenderId:'707020989744',
+        appId:'1:707020989744:web:07a13e641d1193f67d94f5'
+      };
+      const app=appMod.initializeApp(config);
+      authInstance=authMod.getAuth(app);
+      dbApi={db:storeMod.getFirestore(app),...storeMod,authMod};
+    }
+    stage='익명 로그인';
+    status('☁ 익명 로그인 중…','connecting');
+    await authInstance.authStateReady();
+    const user=authInstance.currentUser || (await dbApi.authMod.signInAnonymously(authInstance)).user;
+    if(!user?.uid) throw new Error('사용자 UID가 확인되지 않습니다');
+    uid=user.uid;
+    window.mallangFirebaseUserId=uid;
+    ref=dbApi.doc(dbApi.db,'users',uid);
+    stage='Firestore 읽기';
+    status('☁ 클라우드 저장 기록 확인 중…','connecting');
+    let remote;
+    try { remote=await dbApi.getDoc(ref); }
+    catch(e) {
+      // A temporarily stale identity token can produce a one-off permission error.
+      // Refresh it once; do not weaken Firestore Rules.
+      if(e?.code!=='permission-denied') throw e;
+      await user.getIdToken(true);
+      await wait(450);
+      remote=await dbApi.getDoc(ref);
+    }
+    let local=pending();
+    if(remote.exists()) {
+      const cloud=remote.data();
+      const cloudTime=cloud.updatedAt?.toMillis?.() || 0;
+      const ownPending=local && (!local.uid || local.uid===uid);
+      const isLocalNewer=ownPending && Number(local.modifiedAt||0)>cloudTime;
+      if(isLocalNewer) {
+        // Offline local edit wins over older remote data.
+        if(!bridge.applySave(local.save)) throw new Error('대기 중인 로컬 저장 기록의 형식이 잘못됐습니다');
+        if(!local.uid) updatePending({...local,uid});
+      } else {
+        // Backup local before applying cloud profile, in case there was another browser profile.
+        try {
+          if(!localStorage.getItem('mallangomok-before-cloud-restore'))
+            localStorage.setItem('mallangomok-before-cloud-restore',JSON.stringify(bridge.getSave()));
+        } catch{}
+        if(!bridge.applySave(cloud.save)) throw new Error('클라우드 저장 기록의 형식이 잘못됐습니다');
+        if(local && local.uid===uid) { // old identical local edits
+          try{localStorage.removeItem(pendingKey)}catch{}
+        }
+      }
+    } else {
+      // First login: upload user's existing game progress, never wipe local data.
+      const source=local && (!local.uid || local.uid===uid) ? local.save : bridge.getSave();
+      updatePending({uid,modifiedAt:Date.now(),save:source});
+    }
+    ready=true;
+    lastError=null;
+    window.mallangFirebaseLastError=null;
+    status('☁ 클라우드 연결됨 · 저장 확인 중','saving');
+    schedule(150);
+  } catch(e) {
+    ready=false;
+    errorInfo(stage,e);
+  } finally {connecting=false;}
+}
+window.mallangFirebaseRetry=()=>void connect();
+void connect();
 </script>
 </body>
 </html>
