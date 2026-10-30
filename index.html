@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="mobile-web-app-capable" content="yes">
-<title>말랑오목 v9.4 - 동물돌 12종 교체</title>
+<title>말랑오목 v9.5 - 메인 아이콘 정렬 개선</title>
 <style>
 :root{--ink:#654533;--brown:#7a533e;--muted:#9e806a;--cream:#fff7e9;--card:#fffaf1;--line:#ead5b9;--pink:#f5a4a7;--green:#a4c9a0;--blue:#9bd3e5;--yellow:#f9d47e;--shadow:0 9px 25px #76553d19;--wood:#eec993;--grid:#b88455;--btnshadow:#8e5f46;font-family:ui-rounded,'Apple SD Gothic Neo','Noto Sans KR','Malgun Gothic',system-ui,sans-serif;color:var(--ink)}
 *{box-sizing:border-box}html{background:#fff5e7}body{margin:0;min-width:300px;min-height:100dvh;background:radial-gradient(ellipse at top left,#ffeacb 0,transparent 44%),radial-gradient(ellipse at bottom right,#e9f1d3 0,transparent 42%),#fff5e7;-webkit-font-smoothing:antialiased}button,input{font:inherit}button{cursor:pointer;color:inherit;touch-action:manipulation;-webkit-tap-highlight-color:transparent}button:focus-visible,input:focus-visible{outline:3px solid #86b5ad;outline-offset:3px}.app{width:min(100%,1100px);margin:auto;min-height:100dvh;padding:14px 24px 35px;position:relative}.app:before{content:'✿';pointer-events:none;position:fixed;right:-21px;top:20%;font-size:110px;color:#f8d3b7;opacity:.34;z-index:-1}.topbar{height:67px;display:flex;align-items:center;justify-content:space-between;gap:12px}.brand{display:flex;align-items:center;gap:8px;border:0;background:none;font-size:26px;font-weight:1000;letter-spacing:-1.7px;color:#73492f;text-shadow:1px 2px #fff;white-space:nowrap}.brand .leaf{display:inline-grid;place-items:center;width:38px;height:38px;border-radius:14px;background:#a8d4ab;border:2px solid #759b76;font-size:23px;box-shadow:0 3px #789e80}.top-actions{display:flex;align-items:center;gap:8px}.top-chip{border:2px solid #e8d4b5;border-radius:30px;background:#fffaf0;padding:9px 12px;font-size:13px;font-weight:900;box-shadow:0 3px #eddfc9}.top-chip .coin{color:#d89527}.iconbtn{width:43px;height:43px;border:2px solid #ebd7c0;border-radius:14px;background:#fffaf0;font-size:22px;box-shadow:0 3px #eddfc9}.view{display:none;animation:appear .25s ease}.view.active{display:block}@keyframes appear{from{opacity:.7;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
@@ -425,6 +425,34 @@ body.home-active .game-portrait{background-image:url("data:image/webp;base64,Ukl
  .v6-controls #twoPlayerBtn .duo-menu-art img{width:92px!important;max-height:51px!important}
 }
 
+
+/* v9.5: Center the owl and versus sprites inside the actual button content boxes.
+   Icons were previously 52/55px tall while the mobile button was only 58.5px,
+   causing overflow below the bottom border. Keep the originals embedded. */
+.v6-controls #aiBtn .menu-icon.owl-menu-art {
+ width:49px!important;height:46px!important;min-width:49px!important;
+ margin:0!important;align-self:center!important;overflow:visible!important;
+}
+.v6-controls #aiBtn .owl-menu-art img {
+ display:block!important;width:47px!important;height:47px!important;
+ max-width:47px!important;max-height:47px!important;
+ object-fit:contain!important;object-position:center center!important;
+ transform:translateY(-2px)!important;
+}
+.v6-controls #twoPlayerBtn .menu-icon.duo-menu-art {
+ width:94px!important;height:44px!important;min-width:0!important;
+ margin:0!important;align-self:center!important;overflow:visible!important;
+}
+.v6-controls #twoPlayerBtn .duo-menu-art img {
+ display:block!important;width:91px!important;height:auto!important;
+ max-width:91px!important;max-height:44px!important;
+ object-fit:contain!important;object-position:center center!important;
+ transform:translateY(-2px)!important;
+}
+@media(max-width:375px){
+ .v6-controls #twoPlayerBtn .menu-icon.duo-menu-art{width:84px!important;height:42px!important}
+ .v6-controls #twoPlayerBtn .duo-menu-art img{width:83px!important;max-width:83px!important;max-height:40px!important}
+}
 </style>
 </head>
 <body class="onboarding-active">
