@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="mobile-web-app-capable" content="yes">
-<title>말랑오목 v10.6.3 - 한 화면 대국 · 친구 · 관전</title>
+<title>말랑오목 v10.6.4 - 친구 대전 화면 전환 수정</title>
 <style>
 :root{--ink:#654533;--brown:#7a533e;--muted:#9e806a;--cream:#fff7e9;--card:#fffaf1;--line:#ead5b9;--pink:#f5a4a7;--green:#a4c9a0;--blue:#9bd3e5;--yellow:#f9d47e;--shadow:0 9px 25px #76553d19;--wood:#eec993;--grid:#b88455;--btnshadow:#8e5f46;font-family:ui-rounded,'Apple SD Gothic Neo','Noto Sans KR','Malgun Gothic',system-ui,sans-serif;color:var(--ink)}
 *{box-sizing:border-box}html{background:#fff5e7}body{margin:0;min-width:300px;min-height:100dvh;background:radial-gradient(ellipse at top left,#ffeacb 0,transparent 44%),radial-gradient(ellipse at bottom right,#e9f1d3 0,transparent 42%),#fff5e7;-webkit-font-smoothing:antialiased}button,input{font:inherit}button{cursor:pointer;color:inherit;touch-action:manipulation;-webkit-tap-highlight-color:transparent}button:focus-visible,input:focus-visible{outline:3px solid #86b5ad;outline-offset:3px}.app{width:min(100%,1100px);margin:auto;min-height:100dvh;padding:14px 24px 35px;position:relative}.app:before{content:'✿';pointer-events:none;position:fixed;right:-21px;top:20%;font-size:110px;color:#f8d3b7;opacity:.34;z-index:-1}.topbar{height:67px;display:flex;align-items:center;justify-content:space-between;gap:12px}.brand{display:flex;align-items:center;gap:8px;border:0;background:none;font-size:26px;font-weight:1000;letter-spacing:-1.7px;color:#73492f;text-shadow:1px 2px #fff;white-space:nowrap}.brand .leaf{display:inline-grid;place-items:center;width:38px;height:38px;border-radius:14px;background:#a8d4ab;border:2px solid #759b76;font-size:23px;box-shadow:0 3px #789e80}.top-actions{display:flex;align-items:center;gap:8px}.top-chip{border:2px solid #e8d4b5;border-radius:30px;background:#fffaf0;padding:9px 12px;font-size:13px;font-weight:900;box-shadow:0 3px #eddfc9}.top-chip .coin{color:#d89527}.iconbtn{width:43px;height:43px;border:2px solid #ebd7c0;border-radius:14px;background:#fffaf0;font-size:22px;box-shadow:0 3px #eddfc9}.view{display:none;animation:appear .25s ease}.view.active{display:block}@keyframes appear{from{opacity:.7;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
@@ -1015,7 +1015,7 @@ let pendingMove=null;
 let toastTimeout;
 function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('visible');clearTimeout(toastTimeout);toastTimeout=setTimeout(()=>t.classList.remove('visible'),2500)}
 function sound(){if(!saved.sound)return;try{const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;const ctx=window.__mallangAudio||(window.__mallangAudio=new AC());const o=ctx.createOscillator(),v=ctx.createGain();o.type='sine';o.frequency.setValueAtTime(440,ctx.currentTime);o.frequency.exponentialRampToValueAtTime(610,ctx.currentTime+.07);v.gain.setValueAtTime(.018,ctx.currentTime);v.gain.exponentialRampToValueAtTime(.00001,ctx.currentTime+.115);o.connect(v);v.connect(ctx.destination);o.start();o.stop(ctx.currentTime+.12)}catch{}}
-function display(view){document.body.classList.toggle('home-active',view==='home');document.body.classList.toggle('onboarding-active',view==='onboarding');['onboarding','home','game','profile','shop'].forEach(n=>$(n+'View').classList.toggle('active',n===view));window.scrollTo({top:0,behavior:'instant'});if(view==='home')renderHome();if(view==='profile')renderProfile();if(view==='shop')renderShop();}
+function display(view){document.body.classList.toggle('home-active',view==='home');document.body.classList.toggle('onboarding-active',view==='onboarding');['onboarding','home','game','profile','shop'].forEach(n=>$(n+'View').classList.toggle('active',n===view));document.querySelectorAll('#socialFriendsView,#spectateView').forEach(v=>v.classList.remove('active'));window.scrollTo({top:0,behavior:'instant'});if(view==='home')renderHome();if(view==='profile')renderProfile();if(view==='shop')renderShop();}
 function updateTop(){const ld=levelData();$('topCoins').textContent=Math.max(0,saved.coins);$('topLevel').textContent=ld.level;$('shopCoinInfo').textContent='✦ '+saved.coins+' 코인'}
 function openDialog({art='🌸',title='말랑오목',text='',extra='',buttons=[{label:'확인',run:closeDialog}]}={}){$('dialogArt').innerHTML=pieces[art]||`<span style="font-size:78px">${art}</span>`;$('dialogTitle').textContent=title;$('dialogText').textContent=text;$('dialogExtra').innerHTML=extra;$('dialogButtons').replaceChildren();buttons.forEach(({label,run,alt})=>{const b=document.createElement('button');b.className='dialogbtn'+(alt?' alt':'');b.textContent=label;b.onclick=run;$('dialogButtons').append(b)});$('overlay').classList.add('show')}
 function closeDialog(){$('overlay').classList.remove('show')}
@@ -2142,7 +2142,22 @@ function installHooks(){
  const onUI=window.mallangOnlineUI;const game=window.mallangOnline;
  if(!onUI||!game)throw Error('기존 온라인 게임 연결 함수를 찾을 수 없어요.');
  const origUpdate=onUI.onlineGameStart;
- onUI.onlineGameStart=function(room,uid){const result=origUpdate.call(this,room,uid);trackRoom(room);return result};
+ onUI.onlineGameStart=function(room,uid){
+  // v10.6.4: Cloudflare join success must dismiss the social screen on BOTH players.
+  friendScreen=false;
+  stopWatching();
+  $('socialFriendsView').classList.remove('active');
+  $('spectateView').classList.remove('active');
+  const result=origUpdate.call(this,room,uid);
+  // Existing-game state updates may not call display('game'); avoid a blank or stacked screen.
+  if(!$('gameView').classList.contains('active')){
+   document.querySelectorAll('main>.view').forEach(v=>v.classList.remove('active'));
+   $('gameView').classList.add('active');
+   document.body.classList.remove('home-active','onboarding-active');
+  }
+  trackRoom(room);
+  return result
+ };
  const origLeave=game.leave;
  game.leave=async function(...args){leaveTracked();return origLeave.apply(this,args)};
  // Change from local/AI to game or navigate home: clean up old room chat on view changes.
