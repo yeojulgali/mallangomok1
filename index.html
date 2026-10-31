@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="mobile-web-app-capable" content="yes">
-<title>말랑오목 v10.4 - 한 화면 AI · 온라인 대전</title>
+<title>말랑오목 v10.6.1 - 친구 · 관전 · 채팅</title>
 <style>
 :root{--ink:#654533;--brown:#7a533e;--muted:#9e806a;--cream:#fff7e9;--card:#fffaf1;--line:#ead5b9;--pink:#f5a4a7;--green:#a4c9a0;--blue:#9bd3e5;--yellow:#f9d47e;--shadow:0 9px 25px #76553d19;--wood:#eec993;--grid:#b88455;--btnshadow:#8e5f46;font-family:ui-rounded,'Apple SD Gothic Neo','Noto Sans KR','Malgun Gothic',system-ui,sans-serif;color:var(--ink)}
 *{box-sizing:border-box}html{background:#fff5e7}body{margin:0;min-width:300px;min-height:100dvh;background:radial-gradient(ellipse at top left,#ffeacb 0,transparent 44%),radial-gradient(ellipse at bottom right,#e9f1d3 0,transparent 42%),#fff5e7;-webkit-font-smoothing:antialiased}button,input{font:inherit}button{cursor:pointer;color:inherit;touch-action:manipulation;-webkit-tap-highlight-color:transparent}button:focus-visible,input:focus-visible{outline:3px solid #86b5ad;outline-offset:3px}.app{width:min(100%,1100px);margin:auto;min-height:100dvh;padding:14px 24px 35px;position:relative}.app:before{content:'✿';pointer-events:none;position:fixed;right:-21px;top:20%;font-size:110px;color:#f8d3b7;opacity:.34;z-index:-1}.topbar{height:67px;display:flex;align-items:center;justify-content:space-between;gap:12px}.brand{display:flex;align-items:center;gap:8px;border:0;background:none;font-size:26px;font-weight:1000;letter-spacing:-1.7px;color:#73492f;text-shadow:1px 2px #fff;white-space:nowrap}.brand .leaf{display:inline-grid;place-items:center;width:38px;height:38px;border-radius:14px;background:#a8d4ab;border:2px solid #759b76;font-size:23px;box-shadow:0 3px #789e80}.top-actions{display:flex;align-items:center;gap:8px}.top-chip{border:2px solid #e8d4b5;border-radius:30px;background:#fffaf0;padding:9px 12px;font-size:13px;font-weight:900;box-shadow:0 3px #eddfc9}.top-chip .coin{color:#d89527}.iconbtn{width:43px;height:43px;border:2px solid #ebd7c0;border-radius:14px;background:#fffaf0;font-size:22px;box-shadow:0 3px #eddfc9}.view{display:none;animation:appear .25s ease}.view.active{display:block}@keyframes appear{from{opacity:.7;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
@@ -689,6 +689,9 @@ body.home-active #twoPlayerBtn .duo-menu-art .fresh-duo-vs{position:absolute;lef
   #gameView .compact-game-tips{grid-template-columns:1fr;gap:10px}
   #gameView .compact-game-tips .tip-half+.tip-half{border-left:0;border-top:1px solid #edcfaa;padding:10px 0 0}
 }
+
+/* v10.6 friends & spectator features */
+.social-home-button{min-height:80px}.social-view{max-width:1010px;margin:0 auto;padding:18px 12px 44px}.social-heading{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:4px 0 16px}.social-heading h2{font-size:clamp(20px,3vw,27px);margin:0;color:#714a37}.social-card{border:2px solid #efddc6;background:#fffaf3;border-radius:22px;padding:18px;margin:12px 0;box-shadow:0 6px 14px #7b533011;color:#74513d}.social-card h3{font-size:17px;margin:0 0 12px}.social-card small{color:#957b67;font-size:12px}.social-code{display:flex;gap:9px;align-items:center;margin:12px 0}.social-code code{font-size:clamp(20px,5vw,26px);letter-spacing:.12em;font-weight:800;color:#6c5642}.social-code input{min-width:0;flex:1;line-height:1.6;font-size:16px;border:1px solid #dec9b6;border-radius:13px;padding:10px;background:white;color:#67442f}.social-card button:not(.backbtn){background:#f7d6ab;color:#684530;border:1px solid #eac394;border-radius:12px;padding:9px 13px;font-weight:750;cursor:pointer;min-height:38px}.social-card button.secondary{background:#fff7ee;border-color:#eedbca;color:#957965}.social-card button:disabled{opacity:.5;cursor:not-allowed}.social-card button:focus-visible,.social-view button:focus-visible{outline:3px solid #76b6c2;outline-offset:3px}.social-rows{display:grid;gap:8px}.social-row{background:#fff;border:1px solid #f1e2d1;border-radius:15px;padding:10px 12px;display:flex;align-items:center;gap:8px}.social-row>div:first-child{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}.social-row strong{font-size:14px;overflow-wrap:anywhere}.social-row small{font-size:12px}.social-outgoing{margin-top:12px;display:grid;gap:8px}.social-game-chat{margin-top:14px}.social-game-chat[hidden],#socialGameChatBtn[hidden],#socialLatestBubble[hidden]{display:none!important}.social-preset-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.social-reactions{display:flex;gap:12px;margin:13px 0}.social-reactions button{flex:1}.social-chat-stream{max-height:180px;overflow-y:auto;border:1px solid #f0dfce;background:#fff;border-radius:12px;min-height:50px;padding:7px;display:flex;flex-direction:column;gap:7px}.social-message{display:flex;gap:7px;align-items:center;font-size:13px;line-height:1.5;background:#fff7ed;border-radius:10px;padding:7px 9px;overflow-wrap:anywhere}.social-message.mine{background:#f0f8ee}.social-message-name{color:#ae8672;font-weight:700;white-space:nowrap}.social-latest-bubble{position:absolute;z-index:20;top:8px;left:50%;transform:translateX(-50%);border-radius:25px;background:#fffaf3ee;border:2px solid #e6c6a7;padding:8px 14px;color:#704c38;box-shadow:0 5px 14px #48321640;font-size:13px;font-weight:bold;max-width:85%;pointer-events:none}.board-frame{position:relative}.social-match-name{text-align:center;font-size:clamp(15px,3vw,19px);font-weight:850;margin-bottom:8px}.social-watch-sub{text-align:center;font-size:13px;color:#93745f;margin:10px 0}.social-board-frame{max-width:620px;margin:16px auto}.social-spectator-cell{pointer-events:none;cursor:default!important}.social-fallback-stone{display:block;width:75%;height:75%;border-radius:50%;background:#b99e88}.social-board-frame .board{width:100%;aspect-ratio:1}.social-board-frame .cell{display:flex;align-items:center;justify-content:center}@media(max-width:560px){.social-row{flex-wrap:wrap}.social-code button{padding:9px}.social-view{padding-left:8px;padding-right:8px}.social-card{padding:13px}.social-preset-grid{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body class="onboarding-active">
@@ -788,7 +791,7 @@ body.home-active #twoPlayerBtn .duo-menu-art .fresh-duo-vs{position:absolute;lef
   <section class="surface shop-wrap"><h3 class="shop-tit">🐾 동물돌 스킨</h3><p class="animal-shop-intro">캐릭터를 한 번 구매하면 <strong>흑돌 + 백돌</strong> 모두 열려요. 마음에 드는 동물을 색상별로 따로 장착하세요!</p><div class="shop-grid" id="animalShop"></div><h3 class="shop-tit" style="margin-top:28px">🌼 오목판 스킨</h3><div class="shop-grid" id="boardShop"></div><p class="shop-note">🎁 카피바라와 토끼는 흑백돌 모두 무료예요. 구매 기록은 이 브라우저에 저장됩니다. 온라인 베타 대전은 코인 및 경험치 보상이 없어요.</p></section>
 </section>
 </main>
-<footer class="footer">말랑오목 v10.4 · 한 화면 AI·온라인 대전 ♡</footer>
+<footer class="footer">말랑오목 v10.6.1 · 친구·관전·빠른 채팅 ♡</footer>
 </div>
 <div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><div class="dialog"><div class="art" id="dialogArt"></div><h2 id="dialogTitle">말랑오목</h2><p id="dialogText"></p><div id="dialogExtra"></div><div id="dialogButtons"></div></div></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -1402,6 +1405,7 @@ $('homePlayer').onclick=()=>display('profile');$('editAvatar').onclick=()=>setup
 
 $('homeGear').onclick=settings;$('homeGearBottom').onclick=settings;$('homeInbox').onclick=()=>openDialog({art:'🌸',title:'말랑 우편함',text:'말랑오목에 오신 것을 환영해요! 캐릭터 하나를 구매하면 흑돌과 백돌이 둘 다 열려요. AI 대전과 꾸미기를 즐겨보세요. 친구 코드 대전과 온라인 랜덤 매칭을 이용해보세요!',buttons:[{label:'확인',run:closeDialog}]});$('profileHomeBtn').onclick=()=>display('profile');$('brandBtn').onclick=home;document.querySelectorAll('[data-home]').forEach(b=>b.onclick=home);$('coinChip').onclick=()=>display('shop');$('levelChip').onclick=()=>display('profile');$('settingBtn').onclick=settings;$('randomBtn').onclick=askOnline;$('twoPlayerBtn').onclick=()=>startGame('local');$('confirmMove').onclick=commitPreview;$('cancelMove').onclick=cancelPreview;$('aiBtn').onclick=pickAI;$('localBtn').onclick=rules;$('shopBtn').onclick=()=>display('shop');$('gameBack').onclick=()=>openDialog({art:'bunny',title:'대국을 나갈까요?',text:game.mode==='online'?'방을 나가면 상대는 계속 기다릴 수 있어요. 온라인 대국 기록은 방에 남아요.':'진행 중인 대국은 저장되지 않아요.',buttons:[{label:'계속 두기',run:closeDialog},{label:'메인으로 나가기',alt:true,run:()=>{closeDialog();home()}}]});$('rulesBtn').onclick=rules;$('resetGameBtn').onclick=()=>{if(game.mode==='online'){toast('온라인 재대국 기능은 다음 버전에 추가할게요.');return}openDialog({art:'🌱',title:'새 대국을 시작할까요?',text:'현재 대국은 초기화되고 보상은 지급되지 않아요.',buttons:[{label:'새 대국 시작',run:()=>{closeDialog();startGame(game.mode,game.difficulty,game.playerColor)}},{label:'계속하기',alt:true,run:closeDialog}]})};$('undoBtn').onclick=undo;$('forbiddenBtn').onclick=()=>{saved.showForbidden=!saved.showForbidden;persist();renderBoard()};$('saveNickname').onclick=()=>{const nick=$('nicknameInput').value.trim();if(!nick){toast('닉네임을 입력해주세요!');return}saved.nickname=nick.slice(0,10);persist();renderProfile();toast('닉네임이 저장됐어요 ♡')};$('toShopFromProfile').onclick=()=>display('shop');$('overlay').addEventListener('click',e=>{if(e.target===$('overlay'))closeDialog()});
 buildBoard();updateTop();renderShop();renderHome();if(saved.onboarded)display('home');else setupProfile(false);
+window.mallangSocialStoneMarkup=stoneMarkup;
 window.mallangCloudBridge.status('☁ Firebase 연결 중…','connecting');
 })();
 </script>
@@ -1763,11 +1767,23 @@ async function tryClaim(candidate){
  }catch(e){if(e?.code!=='aborted')console.warn('매칭 경쟁 처리',e)}finally{claiming=false}
 }
 async function startRandom(){
- await onlineReady();await leave();
+ await onlineReady();
+ await leave();
+ // v10.6.1: after a previous match, the owner's matchQueue ticket can still be
+ // status=matched. A plain setDoc would become an update and Firestore could
+ // reject it. Remove the owner's old ticket first, then create a fresh ticket.
+ const myTicket=queueRef(uid);
+ const previousTicket=await dbApi.getDoc(myTicket);
+ if(previousTicket.exists())await dbApi.deleteDoc(myTicket);
  onlineQueue=true;onUI.showRandomWaiting();
  const skins=mySkins();
- await dbApi.setDoc(queueRef(uid),{status:'waiting',nickname:myName(),blackSkin:skins.black,whiteSkin:skins.white,createdAt:Date.now(),roomCode:'',guestUid:'',updatedAt:dbApi.serverTimestamp()});
- offMyQueue=dbApi.onSnapshot(queueRef(uid),snap=>{
+ try{
+  await dbApi.setDoc(myTicket,{status:'waiting',nickname:myName(),blackSkin:skins.black,whiteSkin:skins.white,createdAt:Date.now(),roomCode:'',guestUid:'',updatedAt:dbApi.serverTimestamp()});
+ }catch(error){
+  clearMatching();
+  throw error;
+ }
+ offMyQueue=dbApi.onSnapshot(myTicket,snap=>{
   if(!onlineQueue||!snap.exists())return;
   const row=snap.data();if(row.status==='matched'&&row.roomCode){clearMatching();subscribeRoom(row.roomCode)}
  },e=>console.error('matchQueue own',e));
@@ -1779,6 +1795,7 @@ async function startRandom(){
  },e=>console.error('matchQueue list',e));
 }
 window.mallangOnline={createFriend,joinFriend,startRandom,cancelWaiting,leave,play,serverMode:()=>cfActive()?'Cloudflare 친구 대전 서버 판정 / 랜덤은 Firebase 베타':'Firebase 베타 (서버 판정 없음)'};
+window.mallangSocialServices={getFirestore:()=>dbApi,getUid:()=>uid};
 // A shared invitation link pre-fills the join field (does not auto-create a second guest account).
 window.addEventListener('load',()=>{setTimeout(()=>{
  const code=new URL(location.href).searchParams.get('room');
@@ -1786,6 +1803,238 @@ window.addEventListener('load',()=>{setTimeout(()=>{
 },900)});
 
 void connect();
+</script>
+<script>/* 말랑오목 v10.6: friends, presence, live spectating, preset chat, reactions.
+   Spectator relay is Firebase (read-only viewer), game rules remain on existing referee server.
+   Requires the accompanying Firestore security-rule additions. */
+(()=>{'use strict';
+const $=id=>document.getElementById(id);
+const presets=['한판입니다!','행운을 빌어요','이런!','하하'];
+const reactions=['😂','😭'];
+const codeAlphabet='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const info=(message)=>{const el=$('socialNotice');if(el)el.textContent=message;console.info('[말랑오목 소셜]',message)};
+const fail=(e)=>{console.error('[말랑오목 소셜]',e);info(e?.code==='permission-denied'?'Firestore 소셜 보안 규칙을 적용해야 해요.':(e?.message||'연결 오류가 발생했어요.'))};
+let api=null,db=null,me='',myCode='',connections=[],profiles=new Map(),profileSubs=[],connectionSub=null,heartbeat=null;
+let roomCode='',roomMode='',roomRole='',roomHost='',roomGuest='',roomSub=null,msgSub=null,lastSeenMessage=null,previousRoomHash='',lastWritePromise=Promise.resolve();
+let viewingCode='',viewSub=null,viewMessagesSub=null,lastChatAt=0,friendScreen=false;
+const mySave=()=>window.mallangCloudBridge?.getSave?.()||{};
+const myNick=()=>String(mySave().nickname||'말랑 친구').slice(0,10);
+const myAvatar=()=>String(mySave().profileAvatar||'capy').slice(0,25);
+const socialDoc=(...parts)=>api.doc(db,...parts);
+const socialCol=(...parts)=>api.collection(db,...parts);
+const escapeText=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+const friendKey=(a,b)=>[a,b].sort().join('_');
+const isLive=p=>p&&Date.now()-Number(p.lastSeen||0)<90000;
+function randomCode(length=9){const bytes=crypto.getRandomValues(new Uint8Array(length));return [...bytes].map(n=>codeAlphabet[n%codeAlphabet.length]).join('')}
+const wrap=document.createElement('div');wrap.id='mallangSocialRoot';wrap.innerHTML=`<section id="socialFriendsView" class="view social-view"><div class="social-heading"><button id="socialGoHome" class="backbtn" type="button">← 메인</button><h2>🐾 말랑 친구</h2></div><div class="social-card"><strong>내 친구 코드</strong><div class="social-code"><code id="socialMyCode">연결 중…</code><button id="socialCopyCode" type="button">복사</button></div><small>코드를 친구에게 알려주면 친구 신청을 받을 수 있어요.</small></div><div class="social-card"><strong>친구 추가</strong><div class="social-code"><input id="socialFriendInput" maxlength="30" placeholder="친구의 코드 9자리" autocomplete="off" spellcheck="false"><button id="socialAddFriend" type="button">신청</button></div><small id="socialNotice" aria-live="polite">친구 신청은 상대가 수락해야 완료돼요.</small></div><div class="social-card"><h3>받은 친구 신청 <span id="socialPendingCount"></span></h3><div id="socialIncoming" class="social-rows"></div></div><div class="social-card"><h3>친구 목록 <span id="socialFriendCount"></span></h3><div id="socialFriendList" class="social-rows"></div><div id="socialOutgoing" class="social-outgoing"></div></div></section><section id="spectateView" class="view social-view"><div class="social-heading"><button class="backbtn" id="socialExitWatch" type="button">← 나가기</button><h2>👀 실시간 관전</h2><span class="soft-tag">착수 불가</span></div><div class="social-card"><div class="social-match-name" id="socialMatchNames">대국 연결 중…</div><div class="social-watch-sub" id="socialWatchStatus">대국 상태를 확인하고 있어요.</div><div class="board-frame social-board-frame"><div class="board" id="socialWatchBoard" role="grid" aria-label="관전용 오목판"></div></div><div class="social-watch-sub">관전자는 돌을 둘 수 없고, 😂 😭 반응만 보낼 수 있어요.</div><div class="social-reactions"><button type="button" data-watch-reaction="😂">😂 웃음</button><button type="button" data-watch-reaction="😭">😭 울음</button></div><div class="social-chat-stream" id="socialWatchChat" aria-live="polite"></div></div></section>`;
+// Main uses .view panels as direct children. Append both panels to the same main.
+const main=document.querySelector('main');main.append(...wrap.children);
+const friendBtn=document.createElement('button');friendBtn.id='socialFriendsBtn';friendBtn.className='storybook-button blue social-home-button';friendBtn.type='button';friendBtn.innerHTML='<span class="menu-icon">🐾</span><span>친구 · 관전</span><span class="btn-shine">✦</span>';
+document.querySelector('#homeView .home-menu')?.append(friendBtn);
+const gameChatButton=document.createElement('button');gameChatButton.id='socialGameChatBtn';gameChatButton.type='button';gameChatButton.className='sm-btn';gameChatButton.hidden=true;gameChatButton.innerHTML='<span aria-hidden="true">💬</span><span>빠른 채팅</span>';
+document.querySelector('#gameView .action-grid')?.append(gameChatButton);
+const chatPanel=document.createElement('section');chatPanel.id='socialGameChatPanel';chatPanel.className='social-card social-game-chat';chatPanel.hidden=true;
+chatPanel.innerHTML='<h3>💬 빠른 채팅 <small>정해진 문구만 전송할 수 있어요.</small></h3><div class="social-preset-grid"></div><div class="social-reactions"><button type="button" data-game-reaction="😂">😂</button><button type="button" data-game-reaction="😭">😭</button></div><div id="socialGameChatStream" class="social-chat-stream" aria-live="polite"></div>';
+for(const msg of presets){const b=document.createElement('button');b.type='button';b.textContent=msg;b.addEventListener('click',()=>sendMessage('chat',msg));chatPanel.querySelector('.social-preset-grid').append(b)}
+document.querySelector('#gameView .compact-game-controls')?.append(chatPanel);
+const latestBubble=document.createElement('div');latestBubble.id='socialLatestBubble';latestBubble.className='social-latest-bubble';latestBubble.hidden=true;
+document.querySelector('#gameView .board-frame')?.append(latestBubble);
+
+async function withInit(){if(api&&me)return;for(let attempt=0;attempt<65;attempt++){const service=window.mallangSocialServices;if(service?.getFirestore?.()&&service?.getUid?.()){api=service.getFirestore();db=api.db;me=service.getUid();return}await sleep(400)}throw Error('Firebase 연결이 준비되지 않았어요. 상단 연결 상태를 확인해 주세요.')}
+async function ensureProfile(){
+ await withInit();
+ const ref=socialDoc('socialProfiles',me);
+ await api.setDoc(ref,{uid:me,nickname:myNick(),avatar:myAvatar(),lastSeen:Date.now()}, {merge:true});
+ const previous=await api.getDoc(ref);myCode=String(previous.data()?.friendCode||'');
+ if(!myCode){
+  let allocated=false;
+  for(let i=0;i<6&&!allocated;i++){
+   const code=randomCode(),lookup=socialDoc('socialCodes',code);
+   try{await api.runTransaction(db,async tx=>{const existing=await tx.get(lookup);if(existing.exists())throw Error('collision');tx.set(lookup,{uid:me});tx.update(ref,{friendCode:code});});myCode=code;allocated=true}
+   catch(e){if(e.message!=='collision')throw e}
+  }
+  if(!allocated)throw Error('친구 코드를 만들지 못했어요. 다시 시도해 주세요.');
+ }
+ $('socialMyCode').textContent=myCode;
+}
+async function markPresence(extra={}){
+ if(!api||!me)return;
+ const update={uid:me,nickname:myNick(),avatar:myAvatar(),lastSeen:Date.now(),...extra};
+ try{await api.setDoc(socialDoc('socialProfiles',me),update,{merge:true})}catch(e){console.warn('presence',e)}
+}
+function refreshPresence(){
+ if(document.visibilityState!=='hidden')void markPresence();
+ if(roomCode&&!viewingCode&&roomMode&&roomRole==='player'&&lastRoomState)void mirrorRoom(lastRoomState,true);
+}
+function stopProfiles(){for(const x of profileSubs)x();profileSubs=[];profiles.clear()}
+function drawFriends(){
+ const incoming=$('socialIncoming'),friends=$('socialFriendList'),outgoing=$('socialOutgoing');
+ incoming.replaceChildren();friends.replaceChildren();outgoing.replaceChildren();
+ const incomingRows=connections.filter(x=>x.status==='pending'&&x.fromUid!==me);
+ const outgoingRows=connections.filter(x=>x.status==='pending'&&x.fromUid===me);
+ const accepted=connections.filter(x=>x.status==='accepted');
+ $('socialPendingCount').textContent=incomingRows.length?'('+incomingRows.length+')':'';
+ $('socialFriendCount').textContent='('+accepted.length+')';
+ for(const c of incomingRows){const other=c.members.find(v=>v!==me);const p=profiles.get(other);const row=friendRow(p?.nickname||c.fromName||'말랑 친구','친구가 되고 싶대요!');row.append(socialButton('수락',()=>void accept(c)),socialButton('거절',()=>void remove(c),true));incoming.append(row)}
+ if(!incomingRows.length)incoming.textContent='새로운 신청이 없어요.';
+ for(const c of accepted){const other=c.members.find(v=>v!==me),p=profiles.get(other);const online=isLive(p);const state=online?(p?.activeRoom?'대국 중':'접속 중'):'오프라인';const row=friendRow(p?.nickname||'말랑 친구',`${online?'🟢':'⚪'} ${state}`);
+  if(online&&p.activeRoom)row.append(socialButton('관전',()=>void spectate(p.activeRoom)));
+  row.append(socialButton('삭제',()=>void remove(c),true));friends.append(row);
+ }
+ if(!accepted.length)friends.textContent='아직 친구가 없어요. 코드를 공유해 보세요!';
+ for(const c of outgoingRows){const other=c.members.find(v=>v!==me),p=profiles.get(other);const row=friendRow(p?.nickname||'말랑 친구','신청 수락 대기 중');row.append(socialButton('취소',()=>void remove(c),true));outgoing.append(row)}
+}
+function friendRow(title,description){const row=document.createElement('div');row.className='social-row';const txt=document.createElement('div');const s=document.createElement('strong');s.textContent=title;const small=document.createElement('small');small.textContent=description;txt.append(s,small);row.append(txt);return row}
+function socialButton(text,action,secondary=false){const b=document.createElement('button');b.type='button';b.className=secondary?'secondary':'';b.textContent=text;b.addEventListener('click',action);return b}
+function watchFriends(){
+ connectionSub?.();stopProfiles();
+ const q=api.query(socialCol('socialConnections'),api.where('members','array-contains',me));
+ connectionSub=api.onSnapshot(q,snap=>{
+  connections=snap.docs.map(d=>({id:d.id,...d.data()})).filter(c=>Array.isArray(c.members)&&c.members.includes(me));
+  stopProfiles();const ids=[...new Set(connections.flatMap(c=>c.members).filter(x=>x!==me))];
+  for(const id of ids){profileSubs.push(api.onSnapshot(socialDoc('socialProfiles',id),sn=>{if(sn.exists())profiles.set(id,sn.data());else profiles.delete(id);drawFriends()},e=>console.warn('friend profile',e)))}
+  drawFriends();
+ },fail);
+}
+async function invite(){
+ try{
+  await withInit();const code=$('socialFriendInput').value.trim().toUpperCase();
+  if(!/^[A-HJ-NP-Z2-9]{9}$/.test(code))throw Error('친구 코드는 영문·숫자 9자리예요.');
+  const lookup=await api.getDoc(socialDoc('socialCodes',code));if(!lookup.exists())throw Error('존재하지 않는 친구 코드예요.');
+  const other=lookup.data().uid;if(other===me)throw Error('나 자신에게는 신청할 수 없어요.');
+  const id=friendKey(me,other),doc=socialDoc('socialConnections',id),existing=await api.getDoc(doc);
+  if(existing.exists())throw Error(existing.data().status==='accepted'?'이미 친구예요.':'이미 친구 신청이 있어요.');
+  await api.setDoc(doc,{members:[me,other].sort(),fromUid:me,fromName:myNick(),status:'pending',createdAt:api.serverTimestamp()});
+  $('socialFriendInput').value='';info('친구 신청을 보냈어요!');
+ }catch(e){fail(e)}
+}
+async function accept(c){try{await api.updateDoc(socialDoc('socialConnections',c.id),{status:'accepted'});info('친구가 되었어요!')}catch(e){fail(e)}}
+async function remove(c){try{await api.deleteDoc(socialDoc('socialConnections',c.id));info('목록을 정리했어요.')}catch(e){fail(e)}}
+async function showFriends(){
+ friendScreen=true;viewingCode='';stopWatching();document.querySelectorAll('main>.view').forEach(v=>v.classList.remove('active'));$('socialFriendsView').classList.add('active');document.body.classList.remove('home-active');window.scrollTo(0,0);
+ try{await ensureProfile();if(friendScreen)watchFriends()}catch(e){fail(e)}
+}
+function goHome(){friendScreen=false;stopWatching();$('socialFriendsView').classList.remove('active');$('spectateView').classList.remove('active');
+ const brand=$('brandBtn');brand?.click();if(!$('homeView').classList.contains('active')){$('homeView').classList.add('active');document.body.classList.add('home-active')}
+}
+// One room document carries a viewer-only shadow state and is not a referee.
+let lastRoomState=null;
+function cleanRoom(room){
+ return {code:String(room.code||'').slice(0,12),mode:String(room.type||'friend').slice(0,12),status:['waiting','playing','finished','cancelled'].includes(room.status)?room.status:'playing',hostUid:String(room.hostUid||''),guestUid:String(room.guestUid||''),hostName:String(room.hostName||'말랑 친구').slice(0,10),guestName:String(room.guestName||'말랑 친구').slice(0,10),hostColor:Number(room.hostColor)===2?2:1,hostBlackSkin:String(room.hostBlackSkin||'capybara_black').slice(0,45),hostWhiteSkin:String(room.hostWhiteSkin||'rabbit_white').slice(0,45),guestBlackSkin:String(room.guestBlackSkin||'capybara_black').slice(0,45),guestWhiteSkin:String(room.guestWhiteSkin||'rabbit_white').slice(0,45),moves:Array.isArray(room.moves)?room.moves.filter(n=>Number.isInteger(n)&&n>=0&&n<225).slice(0,225):[],turn:Number(room.turn)===2?2:1,winner:[0,1,2].includes(Number(room.winner))?Number(room.winner):0,serverValidated:room.serverValidated===true};
+}
+async function mirrorRoom(room,heartbeatOnly=false){
+ if(!api||!room?.code)return;
+ const clean=cleanRoom(room);
+ if(![clean.hostUid,clean.guestUid].includes(me))return;
+ const fingerprint=JSON.stringify(clean);
+ if(fingerprint===previousRoomHash&&!heartbeatOnly)return;
+ previousRoomHash=fingerprint;
+ lastWritePromise=lastWritePromise.catch(()=>{}).then(()=>api.setDoc(socialDoc('socialRooms',clean.code),{...clean,updatedMs:Date.now()}, {merge:true}));
+ try{await lastWritePromise}catch(e){console.warn('spectator mirror',e)}
+}
+function stopMessages(){if(msgSub){msgSub();msgSub=null}roomCode='';lastSeenMessage=null;roomRole='';roomMode='';roomHost='';roomGuest='';lastRoomState=null;previousRoomHash='';$('socialGameChatBtn').hidden=true;$('socialGameChatPanel').hidden=true;latestBubble.hidden=true}
+function showChatEntries(snap,targetId,role){
+ const target=$(targetId);if(!target)return;const rows=snap.docs.map(d=>({id:d.id,...d.data()})).reverse().slice(-30);
+ target.replaceChildren();for(const m of rows){if((m.kind==='chat'&&!presets.includes(m.text))||(m.kind==='reaction'&&!reactions.includes(m.text)))continue;
+ const item=document.createElement('div');item.className='social-message'+(m.senderUid===me?' mine':'');const name=document.createElement('span');name.className='social-message-name';name.textContent=m.senderName||'말랑 친구';const body=document.createElement('span');body.textContent=m.text;item.append(name,body);target.append(item)}
+ target.scrollTop=target.scrollHeight;
+ const newest=rows.at(-1);if(role==='player'&&newest&&lastSeenMessage&&newest.id!==lastSeenMessage){const item=rows.at(-1);latestBubble.textContent=`${item.senderName||'친구'}: ${item.text}`;latestBubble.hidden=false;clearTimeout(window.__mallangBubbleTimer);window.__mallangBubbleTimer=setTimeout(()=>latestBubble.hidden=true,2800)}
+ if(newest)lastSeenMessage=newest.id;
+}
+function attachGameChat(code){if(roomCode===code&&msgSub)return;msgSub?.();roomCode=code;lastSeenMessage=null;
+ const q=api.query(socialCol('socialRooms',code,'messages'),api.orderBy('createdAt','desc'),api.limit(30));
+ msgSub=api.onSnapshot(q,s=>showChatEntries(s,'socialGameChatStream','player'),e=>console.warn('chat read',e));
+}
+async function sendMessage(kind,text){
+ try{
+  if(!api||!me)throw Error('로그인 연결 중이에요.');
+  const isViewer=Boolean(viewingCode),code=isViewer?viewingCode:roomCode;
+  if(!code)throw Error('진행 중인 대국이 없어요.');
+  if(isViewer&&(kind!=='reaction'||!reactions.includes(text)))throw Error('관전자는 이모지 반응만 보낼 수 있어요.');
+  if(kind==='chat'&&!presets.includes(text)||kind==='reaction'&&!reactions.includes(text))throw Error('허용되지 않는 반응이에요.');
+  if(Date.now()-lastChatAt<1600)throw Error('조금만 천천히 보내주세요!');
+  const ref=socialDoc('socialRooms',code),snap=await api.getDoc(ref);if(!snap.exists())throw Error('대국 정보가 사라졌어요.');
+  const r=snap.data();if(!isViewer&&![r.hostUid,r.guestUid].includes(me))throw Error('대국 참가자만 빠른 채팅을 보낼 수 있어요.');
+  if(r.status!=='playing')throw Error('진행 중인 대국에서만 보낼 수 있어요.');
+  lastChatAt=Date.now();await api.addDoc(socialCol('socialRooms',code,'messages'),{senderUid:me,senderName:myNick(),kind,text,createdAt:api.serverTimestamp()});
+ }catch(e){console.warn(e);if(viewingCode){$('socialWatchStatus').textContent=e.message}else{const hint=document.createElement('small');hint.textContent=e.message;chatPanel.append(hint);setTimeout(()=>hint.remove(),2500)}}
+}
+function stopWatching(){viewSub?.();viewSub=null;viewMessagesSub?.();viewMessagesSub=null;viewingCode=''}
+function renderSpectator(r){
+ const black=r.hostColor===1?r.hostName:r.guestName,white=r.hostColor===2?r.hostName:r.guestName;
+ $('socialMatchNames').textContent=`⚫ ${black||'친구'}  VS  ⚪ ${white||'친구'}`;
+ const moves=Array.isArray(r.moves)?r.moves:[];
+ $('socialWatchStatus').textContent=r.status==='finished'?`대국 종료 · ${Number(r.winner)===0?'무승부':Number(r.winner)===1?'흑돌 승리':'백돌 승리'} · ${moves.length}수`:r.status==='cancelled'?'대국이 취소됐어요.':`실시간 관전 · ${moves.length}수 · ${r.turn===1?'흑돌':'백돌'} 차례`;
+ const board=$('socialWatchBoard');board.className='board theme-'+(mySave().theme||'wood');
+ const played=new Map();for(let i=0;i<moves.length;i++){const n=moves[i];if(Number.isInteger(n)&&n>=0&&n<225&&!played.has(n))played.set(n,i%2+1)}
+ const last=moves.at(-1);const frag=document.createDocumentFragment();
+ for(let n=0;n<225;n++){
+  const cell=document.createElement('div');cell.className='cell social-spectator-cell';cell.setAttribute('role','gridcell');
+  const row=Math.floor(n/15),col=n%15;if([3,7,11].includes(row)&&[3,7,11].includes(col)){const star=document.createElement('span');star.className='star';cell.append(star)}
+  if(played.has(n)){
+   const color=played.get(n);const id=color===1?(r.hostColor===1?r.hostBlackSkin:r.guestBlackSkin):(r.hostColor===2?r.hostWhiteSkin:r.guestWhiteSkin);
+   const piece=document.createElement('span');piece.className='piece';piece.innerHTML=window.mallangSocialStoneMarkup?.(id)||'<span class="social-fallback-stone"></span>';cell.append(piece);
+  }
+  if(n===last)cell.classList.add('last','latest');frag.append(cell);
+ }
+ board.replaceChildren(frag);
+}
+async function spectate(code){
+ try{
+  await withInit();const id=String(code||'').toUpperCase();if(!/^[A-Z2-9]{6}$/.test(id))throw Error('잘못된 관전 방 코드예요.');
+  const ref=socialDoc('socialRooms',id),snapshot=await api.getDoc(ref);if(!snapshot.exists())throw Error('관전 가능한 대국을 찾지 못했어요.');
+  if(Date.now()-Number(snapshot.data().updatedMs||0)>110000)throw Error('대국 정보가 오래됐어요. 현재 진행 중인 대국이 아닐 수 있어요.');
+  if(!['playing','finished'].includes(snapshot.data().status))throw Error('지금은 관전할 수 없는 대국이에요.');
+  stopWatching();viewingCode=id;lastSeenMessage=null;document.querySelectorAll('main>.view').forEach(v=>v.classList.remove('active'));$('spectateView').classList.add('active');document.body.classList.remove('home-active');
+  const watchId=id;
+  viewSub=api.onSnapshot(ref,s=>{if(viewingCode===watchId&&s.exists())renderSpectator(s.data())},e=>{console.warn('spectate',e);$('socialWatchStatus').textContent='관전 연결이 끊겼어요.'});
+  const q=api.query(socialCol('socialRooms',id,'messages'),api.orderBy('createdAt','desc'),api.limit(30));
+  viewMessagesSub=api.onSnapshot(q,s=>{if(viewingCode===watchId)showChatEntries(s,'socialWatchChat','viewer')},e=>console.warn('watch messages',e));
+  window.scrollTo(0,0);
+ }catch(e){fail(e)}
+}
+function trackRoom(r){
+ if(!api||!me||!r?.code)return;
+ if(![r.hostUid,r.guestUid].includes(me))return;
+ const code=r.code;
+ if(roomCode!==code){stopMessages();attachGameChat(code)}
+ roomHost=r.hostUid;roomGuest=r.guestUid;roomMode=r.type||'friend';roomRole='player';lastRoomState=r;
+ $('socialGameChatBtn').hidden=false;
+ if(r.status==='playing')void markPresence({activeRoom:code});else void markPresence({activeRoom:''});
+ void mirrorRoom(r);
+}
+function leaveTracked(){
+ if(!roomCode)return;const endedCode=roomCode;
+ // A disconnected participant must not mark a running match as finished. Only hide their own presence.
+ stopMessages();void markPresence({activeRoom:''});
+ console.info('[말랑오목 소셜] 왼쪽 대국에서 나감:',endedCode);
+}
+function installHooks(){
+ const onUI=window.mallangOnlineUI;const game=window.mallangOnline;
+ if(!onUI||!game)throw Error('기존 온라인 게임 연결 함수를 찾을 수 없어요.');
+ const origUpdate=onUI.onlineGameStart;
+ onUI.onlineGameStart=function(room,uid){const result=origUpdate.call(this,room,uid);trackRoom(room);return result};
+ const origLeave=game.leave;
+ game.leave=async function(...args){leaveTracked();return origLeave.apply(this,args)};
+ // Change from local/AI to game or navigate home: clean up old room chat on view changes.
+ $('gameBack')?.addEventListener('click',leaveTracked);
+ $('brandBtn')?.addEventListener('click',()=>{friendScreen=false;stopWatching();$('socialFriendsView').classList.remove('active');$('spectateView').classList.remove('active')});
+}
+async function start(){
+ try{await ensureProfile();watchFriends();installHooks();await markPresence({activeRoom:''});heartbeat=setInterval(refreshPresence,30000);document.addEventListener('visibilitychange',refreshPresence);
+ // Some initial renders can start before Firebase is ready; friend screen remains retryable.
+ }catch(e){console.warn('social startup',e);info('친구 기능 연결을 확인해 주세요. 홈의 친구 버튼으로 다시 시도할 수 있어요.')}
+}
+friendBtn.onclick=()=>void showFriends();$('socialGoHome').onclick=goHome;$('socialExitWatch').onclick=goHome;
+$('socialAddFriend').onclick=()=>void invite();$('socialFriendInput').addEventListener('keydown',e=>{if(e.key==='Enter')void invite()});
+$('socialCopyCode').onclick=()=>{if(!myCode)return;void navigator.clipboard?.writeText(myCode).then(()=>info('친구 코드가 복사됐어요!')).catch(()=>window.prompt('친구 코드',myCode))};
+gameChatButton.onclick=()=>{chatPanel.hidden=!chatPanel.hidden};
+for(const b of document.querySelectorAll('[data-game-reaction]'))b.addEventListener('click',()=>void sendMessage('reaction',b.dataset.gameReaction));
+for(const b of document.querySelectorAll('[data-watch-reaction]'))b.addEventListener('click',()=>void sendMessage('reaction',b.dataset.watchReaction));
+window.mallangSocial={showFriends,spectate,sendMessage,stopWatching};
+void start();
+})();
 </script>
 </body>
 </html>
