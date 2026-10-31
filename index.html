@@ -1015,6 +1015,7 @@ function onlineGameStart(room,uid){
   closeDialog();display('game');
  }
  const oldEnd=game.ended;
+ game.serverValidated=room.serverValidated===true;
  game.onlineBlackName=(room.hostColor===1?room.hostName:room.guestName)||'친구';
  game.onlineWhiteName=(room.hostColor===2?room.hostName:room.guestName)||'친구';
  game.onlineSkins={1:room.hostColor===1?room.hostBlackSkin:room.guestBlackSkin,2:room.hostColor===2?room.hostWhiteSkin:room.guestWhiteSkin};
@@ -1207,7 +1208,7 @@ function stoneSvg(color){return stoneMarkup(gameStoneId(color))}
 function buildBoard(){const root=$('board');const frag=document.createDocumentFragment();for(let r=0;r<15;r++)for(let c=0;c<15;c++){const cell=document.createElement('button');cell.type='button';cell.className='cell';cell.dataset.r=r;cell.dataset.c=c;cell.setAttribute('role','gridcell');cell.setAttribute('aria-label',`${r+1}행 ${c+1}열`);if([3,7,11].includes(r)&&[3,7,11].includes(c)){const s=document.createElement('span');s.className='star';cell.append(s)}cell.onclick=()=>humanMove(r,c);frag.append(cell)}root.replaceChildren(frag)}
 function renderBoard(){const b=$('board');b.className='board theme-'+saved.theme;$('avatarBlack').innerHTML=stoneSvg(1);$('avatarWhite').innerHTML=stoneSvg(2);$('turnFace').innerHTML=stoneSvg(game.turn);
  $('turnLabel').textContent=game.ended?'대국 종료':game.mode==='online'?((game.turn===game.playerColor?'내':'상대')+' 차례'):(isAITurn()?'부엉이 박사':game.mode==='ai'?saved.nickname:game.turn===1?saved.nickname:sideName(2)+' 친구')+' 차례';
- $('gameModeTip').textContent=game.mode==='online'?'온라인 베타 · 코인·XP 보상 없음':game.mode==='ai'?'AI 난이도별 보상 · 무르기 시 0':'한 기기 2인 대전 · 보상 없음';$('playerBlack').classList.toggle('turn',game.turn===1&&!game.ended);$('playerWhite').classList.toggle('turn',game.turn===2&&!game.ended);$('moveCount').textContent=game.history.length+'수';
+ $('gameModeTip').textContent=game.mode==='online'?(game.serverValidated?'서버 판정 친구 대전 · 코인·XP 없음':'Firebase 베타 · 코인·XP 없음'):game.mode==='ai'?'AI 난이도별 보상 · 무르기 시 0':'한 기기 2인 대전 · 보상 없음';$('playerBlack').classList.toggle('turn',game.turn===1&&!game.ended);$('playerWhite').classList.toggle('turn',game.turn===2&&!game.ended);$('moveCount').textContent=game.history.length+'수';
  $('undoBtn').disabled=game.mode==='online'||(!pendingMove&&(game.mode==='ai'?game.history.length<(game.playerColor===2?3:2):game.history.length===0))||game.isThinking||game.ended;
  const undoNotice=$('undoRewardNotice');undoNotice.hidden=game.mode!=='ai'||!game.usedUndo;undoNotice.classList.toggle('disqualified',game.mode==='ai'&&game.usedUndo);undoNotice.textContent=game.usedUndo?'이 판은 무르기 사용으로 코인·XP 보상이 0이에요.':'※ 실제 무르기 사용 시 해당 판의 코인·XP 보상은 0이에요.';
  const previewBox=$('moveConfirm');previewBox.hidden=!pendingMove;
@@ -1578,6 +1579,76 @@ async function connect() {
 }
 window.mallangFirebaseRetry=()=>void connect();
 
+
+// --- Cloudflare authoritative friend-room beta.
+// Paste the deployed Workers URL below. Empty = legacy Firebase room for compatibility.
+const CF_SERVER_URL = 'https://mallang-omok-referee.yeojulgali.workers.dev'; // e.g. https://mallang-omok-referee.<subdomain>.workers.dev
+const cfBase=CF_SERVER_URL.trim().replace(/\/$/,'');
+let cfCode=null,cfSocket=null,cfReconnectTimer=null,cfIntentionalClose=false;
+const cfActive=()=>Boolean(cfBase);
+function cfStop(){
+  cfIntentionalClose=true;cfCode=null;
+  if(cfReconnectTimer){clearTimeout(cfReconnectTimer);cfReconnectTimer=null;}
+  if(cfSocket){cfSocket.onclose=null;cfSocket.close();cfSocket=null;}
+}
+async function cfRequest(code,action,payload){
+ await onlineReady();
+ const user=authInstance?.currentUser;
+ if(!user)throw Error('Firebase 로그인이 필요해요');
+ const token=await user.getIdToken();
+ let response;
+ try{response=await fetch(cfBase+'/api/rooms/'+code+'/'+action,{method:action==='state'?'GET':'POST',
+ headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
+ ...(action==='state'?{}:{body:JSON.stringify(payload||{})})});}
+ catch(e){throw Error('Cloudflare 서버에 접속하지 못했어요. 주소나 네트워크를 확인해주세요.');}
+ let data;try{data=await response.json()}catch{data={}}
+ if(!response.ok)throw Error(data.error||'서버 응답 오류 ('+response.status+')');
+ return data.room;
+}
+async function cfWatch(code){
+ if(!cfCode||cfCode!==code)return;
+ const user=authInstance.currentUser;if(!user)throw Error('로그인이 해제됐어요');
+ const token=await user.getIdToken();
+ const wsUrl=cfBase.replace(/^https:/,'wss:').replace(/^http:/,'ws:')+'/api/rooms/'+code+'/ws';
+ if(cfSocket){cfSocket.onclose=null;cfSocket.close();}
+ cfIntentionalClose=false;
+ const sock=new WebSocket(wsUrl,['mallang-v1','auth.'+token]);cfSocket=sock;
+ sock.onmessage=e=>{if(cfSocket!==sock||cfCode!==code)return;
+   try{const data=JSON.parse(e.data);if(data.type==='state'&&data.room){
+     if(data.room.status==='waiting')onUI.showFriendLobby(data.room);
+     else if(data.room.status==='playing'||data.room.status==='finished')onUI.onlineGameStart(data.room,uid);
+   }}catch(err){console.warn('게임 상태 읽기 오류',err)}
+ };
+ sock.onclose=()=>{if(cfSocket!==sock||cfIntentionalClose||cfCode!==code)return;
+   console.warn('말랑 서버 연결 끊김, 재연결 시도');
+   cfReconnectTimer=setTimeout(()=>{if(cfCode===code)void cfWatch(code).catch(console.error)},1800);
+ };
+ sock.onerror=()=>console.warn('말랑 서버 WebSocket 연결 실패');
+}
+async function cfCreateFriend(choice){
+ await onlineReady();await leave();
+ const sk=mySkins();
+ for(let i=0;i<5;i++){
+   const code=randomCode();
+   try{const room=await cfRequest(code,'create',{code,color:choice,nickname:myName(),blackSkin:sk.black,whiteSkin:sk.white});
+      cfCode=code;onUI.showFriendLobby(room);await cfWatch(code);return code;
+   }catch(e){if(String(e.message).includes('이미 사용된 방 코드'))continue;throw e}
+ }throw Error('방 코드가 겹쳤어요. 다시 시도해주세요.');
+}
+async function cfJoinFriend(code){
+ await onlineReady();await leave();
+ const id=String(code||'').toUpperCase().trim();
+ if(!/^[A-Z2-9]{6}$/.test(id))throw Error('6자리 초대 코드를 입력해주세요');
+ const sk=mySkins();
+ const room=await cfRequest(id,'join',{nickname:myName(),blackSkin:sk.black,whiteSkin:sk.white});
+ cfCode=id;onUI.onlineGameStart(room,uid);await cfWatch(id);return id;
+}
+async function cfPlay(cell){
+ if(!cfCode)throw Error('서버 대국에 연결되어 있지 않아요');
+ const room=await cfRequest(cfCode,'move',{cell});
+ onUI.onlineGameStart(room,uid);return room;
+}
+
 // MallangOmok v9.9: rooms, real-time moves, and transaction-based quick matching.
 const onUI=window.mallangOnlineUI;
 let offRoom=null,offQueue=null,offMyQueue=null,offQueueList=null,onlineRoom=null,onlineQueue=false,joining=false,claiming=false;
@@ -1609,10 +1680,12 @@ function subscribeRoom(code){
  },err=>{console.error('room subscription',err);bridge.status('⚠ 온라인 방 연결 오류 ('+err.code+')','error')});
 }
 async function leave(){
+ if(cfCode)cfStop();
  const oldQueue=onlineQueue;clearMatching();clearRoom();
  if(oldQueue&&uid){try{const ref=queueRef(uid);const snap=await dbApi.getDoc(ref);if(snap.exists()&&snap.data().status==='waiting')await dbApi.deleteDoc(ref)}catch(e){console.warn('매칭 대기 종료',e)}}
 }
 async function createFriend(choice){
+ if(cfActive())return cfCreateFriend(choice);
  await onlineReady();await leave();
  let code;
  for(let attempt=0;attempt<5;attempt++){
@@ -1628,6 +1701,7 @@ async function createFriend(choice){
  throw new Error('초대 코드 생성에 실패했어요. 다시 시도해주세요.');
 }
 async function joinFriend(code){
+ if(cfActive())return cfJoinFriend(code);
  await onlineReady();await leave();
  const id=String(code||'').toUpperCase().trim();
  if(!/^[A-Z2-9]{6}$/.test(id))throw new Error('6자리 초대 코드를 입력해주세요.');
@@ -1644,6 +1718,7 @@ async function joinFriend(code){
  subscribeRoom(id);return id;
 }
 async function cancelWaiting(){
+ if(cfCode){cfStop();await leave();return;}
  if(onlineRoom){
   const code=onlineRoom,ref=roomRef(code);clearRoom();
   try{await dbApi.runTransaction(dbApi.db,async tx=>{const snap=await tx.get(ref);if(snap.exists()&&snap.data().hostUid===uid&&snap.data().status==='waiting')tx.update(ref,{status:'cancelled',updatedAt:dbApi.serverTimestamp()})})}catch(e){console.warn('방 취소',e)}
@@ -1651,6 +1726,7 @@ async function cancelWaiting(){
  await leave();
 }
 async function play(cell){
+ if(cfCode)return cfPlay(cell);
  await onlineReady();if(!onlineRoom)throw new Error('현재 참여 중인 온라인 방이 없어요.');
  await dbApi.runTransaction(dbApi.db,async tx=>{
   const ref=roomRef(onlineRoom),snap=await tx.get(ref);
@@ -1702,7 +1778,7 @@ async function startRandom(){
   if(targets.length)void tryClaim(targets[0]);
  },e=>console.error('matchQueue list',e));
 }
-window.mallangOnline={createFriend,joinFriend,startRandom,cancelWaiting,leave,play};
+window.mallangOnline={createFriend,joinFriend,startRandom,cancelWaiting,leave,play,serverMode:()=>cfActive()?'Cloudflare 친구 대전 서버 판정 / 랜덤은 Firebase 베타':'Firebase 베타 (서버 판정 없음)'};
 // A shared invitation link pre-fills the join field (does not auto-create a second guest account).
 window.addEventListener('load',()=>{setTimeout(()=>{
  const code=new URL(location.href).searchParams.get('room');
