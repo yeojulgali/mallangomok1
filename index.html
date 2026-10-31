@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="mobile-web-app-capable" content="yes">
-<title>말랑오목 v10.6.1 - 친구 · 관전 · 채팅</title>
+<title>말랑오목 v10.6.3 - 한 화면 대국 · 친구 · 관전</title>
 <style>
 :root{--ink:#654533;--brown:#7a533e;--muted:#9e806a;--cream:#fff7e9;--card:#fffaf1;--line:#ead5b9;--pink:#f5a4a7;--green:#a4c9a0;--blue:#9bd3e5;--yellow:#f9d47e;--shadow:0 9px 25px #76553d19;--wood:#eec993;--grid:#b88455;--btnshadow:#8e5f46;font-family:ui-rounded,'Apple SD Gothic Neo','Noto Sans KR','Malgun Gothic',system-ui,sans-serif;color:var(--ink)}
 *{box-sizing:border-box}html{background:#fff5e7}body{margin:0;min-width:300px;min-height:100dvh;background:radial-gradient(ellipse at top left,#ffeacb 0,transparent 44%),radial-gradient(ellipse at bottom right,#e9f1d3 0,transparent 42%),#fff5e7;-webkit-font-smoothing:antialiased}button,input{font:inherit}button{cursor:pointer;color:inherit;touch-action:manipulation;-webkit-tap-highlight-color:transparent}button:focus-visible,input:focus-visible{outline:3px solid #86b5ad;outline-offset:3px}.app{width:min(100%,1100px);margin:auto;min-height:100dvh;padding:14px 24px 35px;position:relative}.app:before{content:'✿';pointer-events:none;position:fixed;right:-21px;top:20%;font-size:110px;color:#f8d3b7;opacity:.34;z-index:-1}.topbar{height:67px;display:flex;align-items:center;justify-content:space-between;gap:12px}.brand{display:flex;align-items:center;gap:8px;border:0;background:none;font-size:26px;font-weight:1000;letter-spacing:-1.7px;color:#73492f;text-shadow:1px 2px #fff;white-space:nowrap}.brand .leaf{display:inline-grid;place-items:center;width:38px;height:38px;border-radius:14px;background:#a8d4ab;border:2px solid #759b76;font-size:23px;box-shadow:0 3px #789e80}.top-actions{display:flex;align-items:center;gap:8px}.top-chip{border:2px solid #e8d4b5;border-radius:30px;background:#fffaf0;padding:9px 12px;font-size:13px;font-weight:900;box-shadow:0 3px #eddfc9}.top-chip .coin{color:#d89527}.iconbtn{width:43px;height:43px;border:2px solid #ebd7c0;border-radius:14px;background:#fffaf0;font-size:22px;box-shadow:0 3px #eddfc9}.view{display:none;animation:appear .25s ease}.view.active{display:block}@keyframes appear{from{opacity:.7;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
@@ -692,6 +692,63 @@ body.home-active #twoPlayerBtn .duo-menu-art .fresh-duo-vs{position:absolute;lef
 
 /* v10.6 friends & spectator features */
 .social-home-button{min-height:80px}.social-view{max-width:1010px;margin:0 auto;padding:18px 12px 44px}.social-heading{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:4px 0 16px}.social-heading h2{font-size:clamp(20px,3vw,27px);margin:0;color:#714a37}.social-card{border:2px solid #efddc6;background:#fffaf3;border-radius:22px;padding:18px;margin:12px 0;box-shadow:0 6px 14px #7b533011;color:#74513d}.social-card h3{font-size:17px;margin:0 0 12px}.social-card small{color:#957b67;font-size:12px}.social-code{display:flex;gap:9px;align-items:center;margin:12px 0}.social-code code{font-size:clamp(20px,5vw,26px);letter-spacing:.12em;font-weight:800;color:#6c5642}.social-code input{min-width:0;flex:1;line-height:1.6;font-size:16px;border:1px solid #dec9b6;border-radius:13px;padding:10px;background:white;color:#67442f}.social-card button:not(.backbtn){background:#f7d6ab;color:#684530;border:1px solid #eac394;border-radius:12px;padding:9px 13px;font-weight:750;cursor:pointer;min-height:38px}.social-card button.secondary{background:#fff7ee;border-color:#eedbca;color:#957965}.social-card button:disabled{opacity:.5;cursor:not-allowed}.social-card button:focus-visible,.social-view button:focus-visible{outline:3px solid #76b6c2;outline-offset:3px}.social-rows{display:grid;gap:8px}.social-row{background:#fff;border:1px solid #f1e2d1;border-radius:15px;padding:10px 12px;display:flex;align-items:center;gap:8px}.social-row>div:first-child{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}.social-row strong{font-size:14px;overflow-wrap:anywhere}.social-row small{font-size:12px}.social-outgoing{margin-top:12px;display:grid;gap:8px}.social-game-chat{margin-top:14px}.social-game-chat[hidden],#socialGameChatBtn[hidden],#socialLatestBubble[hidden]{display:none!important}.social-preset-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.social-reactions{display:flex;gap:12px;margin:13px 0}.social-reactions button{flex:1}.social-chat-stream{max-height:180px;overflow-y:auto;border:1px solid #f0dfce;background:#fff;border-radius:12px;min-height:50px;padding:7px;display:flex;flex-direction:column;gap:7px}.social-message{display:flex;gap:7px;align-items:center;font-size:13px;line-height:1.5;background:#fff7ed;border-radius:10px;padding:7px 9px;overflow-wrap:anywhere}.social-message.mine{background:#f0f8ee}.social-message-name{color:#ae8672;font-weight:700;white-space:nowrap}.social-latest-bubble{position:absolute;z-index:20;top:8px;left:50%;transform:translateX(-50%);border-radius:25px;background:#fffaf3ee;border:2px solid #e6c6a7;padding:8px 14px;color:#704c38;box-shadow:0 5px 14px #48321640;font-size:13px;font-weight:bold;max-width:85%;pointer-events:none}.board-frame{position:relative}.social-match-name{text-align:center;font-size:clamp(15px,3vw,19px);font-weight:850;margin-bottom:8px}.social-watch-sub{text-align:center;font-size:13px;color:#93745f;margin:10px 0}.social-board-frame{max-width:620px;margin:16px auto}.social-spectator-cell{pointer-events:none;cursor:default!important}.social-fallback-stone{display:block;width:75%;height:75%;border-radius:50%;background:#b99e88}.social-board-frame .board{width:100%;aspect-ratio:1}.social-board-frame .cell{display:flex;align-items:center;justify-content:center}@media(max-width:560px){.social-row{flex-wrap:wrap}.social-code button{padding:9px}.social-view{padding-left:8px;padding-right:8px}.social-card{padding:13px}.social-preset-grid{grid-template-columns:1fr 1fr}}
+
+/* v10.6.3: MOBILE ONE-SCREEN GAME. No vertical scrolling in the board view.
+   Board width is recalculated from live VisualViewport height, preserving native touch size. */
+@media(max-width:850px){
+  html:has(#gameView.active){height:100%;overflow:hidden!important;overscroll-behavior:none}
+  body:has(#gameView.active){height:100dvh!important;min-height:0!important;max-height:100dvh!important;overflow:hidden!important;overscroll-behavior:none;touch-action:pan-x}
+  body:has(#gameView.active) .app{height:100dvh!important;min-height:0!important;max-height:100dvh!important;display:flex!important;flex-direction:column!important;overflow:hidden!important;padding:3px 7px max(5px,env(safe-area-inset-bottom))!important}
+  body:has(#gameView.active) main{display:flex!important;flex-direction:column!important;flex:1!important;min-height:0!important;overflow:hidden!important}
+  #gameView.active{display:flex!important;flex-direction:column!important;flex:1!important;min-height:0!important;overflow:hidden!important;animation:none!important}
+  body:has(#gameView.active) .topbar{flex:0 0 39px!important;height:39px!important;min-height:39px!important;max-height:39px!important}
+  #gameView .page-heading{flex:0 0 33px!important;height:33px!important;min-height:33px!important;margin:0 0 3px!important}
+  #gameView .page-heading .backbtn{padding:5px 8px!important}
+  #gameView .game-layout{display:flex!important;flex-direction:column!important;flex:1 1 auto!important;min-height:0!important;max-width:100%!important;gap:3px!important;overflow:visible!important}
+  #gameView .game-main{display:flex!important;flex-direction:column!important;align-items:center!important;flex:0 0 auto!important;min-height:0!important;height:auto!important;max-height:none!important;padding:0!important;overflow:visible!important}
+  /* Bubble has room above profile, without pushing a second chat row under the board. */
+  #gameView .players{flex:0 0 45px!important;height:45px!important;min-height:45px!important;margin:32px 0 3px!important;gap:4px!important}
+  #gameView .player{height:45px!important;min-height:45px!important;padding:3px 5px!important;min-width:0!important}
+  #gameView .player .avatar{height:33px!important;width:33px!important;flex-basis:33px!important}
+  #gameView .player .who{font-size:clamp(10px,2.8vw,12px)!important}
+  #gameView .player .under{font-size:9px!important}
+  #gameView .game-layout .board-frame{box-sizing:border-box!important;width:min(calc(100vw - 18px),var(--mallang-board-fit,245px),540px)!important;max-width:100%!important;height:auto!important;aspect-ratio:1!important;min-width:0!important;flex:0 0 auto!important;padding:4px!important;border:2px solid #9a7352!important;border-radius:14px!important}
+  #gameView .board{width:100%!important;height:100%!important;aspect-ratio:1!important;min-height:0!important}
+  #gameView .board-below{flex:0 0 19px!important;height:19px!important;min-height:19px!important;padding:2px 3px 0!important;margin:0!important;font-size:10px!important}
+  #gameView .game-side{display:flex!important;flex-direction:column!important;flex:0 0 auto!important;min-height:0!important;max-height:none!important;height:auto!important;gap:0!important;margin:0!important;padding:0!important;width:100%!important;overflow:visible!important}
+  #gameView .compact-game-controls{display:flex!important;position:relative!important;flex-direction:column!important;gap:4px!important;flex:0 0 auto!important;min-height:0!important;padding:4px 6px!important;overflow:visible!important}
+  #gameView .compact-game-controls .turn-well{flex:0 0 31px!important;height:31px!important;min-height:31px!important;padding:2px 6px!important}
+  #gameView .compact-game-controls .turn-well .face{width:25px!important;height:25px!important;min-width:25px!important}
+  #gameView .compact-game-controls .action-grid{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:4px!important;margin:0!important}
+  #gameView .compact-game-controls .action-grid:has(#socialGameChatBtn:not([hidden])){grid-template-columns:repeat(5,minmax(0,1fr))!important}
+  #gameView .compact-game-controls .action-grid .sm-btn{height:43px!important;min-height:43px!important;padding:2px 0!important;gap:0!important;font-size:10px!important;border-radius:10px!important}
+  #gameView .compact-game-controls .action-grid .sm-btn>span:first-child{font-size:19px!important;line-height:21px!important}
+  #gameView .compact-game-controls .undo-reward-notice[hidden]{display:none!important}
+  #gameView .compact-game-tips{display:none!important} /* rules remain available through the Rules button */
+  /* Chat selection floats above the controls; does not push the board offscreen. */
+  #gameView #socialGameChatPanel:not([hidden]){position:absolute!important;left:4px!important;right:4px!important;bottom:calc(100% + 7px)!important;margin:0!important;width:auto!important;z-index:60!important;max-height:min(41dvh,280px)!important;overflow-y:auto!important;background:#fffaf1!important;box-shadow:0 5px 20px #543b2e50!important;border:2px solid #dfbe9d!important}
+  #gameView #socialGameChatPanel[hidden]{display:none!important}
+  #gameView .social-player-bubble{max-width:46vw!important;padding:5px 8px!important;font-size:12px!important;line-height:1.2!important}
+}
+@media(max-width:850px) and (max-height:620px){
+  #gameView .players{margin-top:23px!important;flex-basis:40px!important;height:40px!important;min-height:40px!important}
+  #gameView .player{height:40px!important;min-height:40px!important}
+  #gameView .compact-game-controls .turn-well{height:27px!important;min-height:27px!important;flex-basis:27px!important}
+  #gameView .compact-game-controls .action-grid .sm-btn{height:39px!important;min-height:39px!important}
+}
+#gameView .player{position:relative!important;overflow:visible!important}
+#gameView .social-player-bubble{position:absolute;bottom:calc(100% + 5px);left:3px;z-index:50;width:max-content;max-width:min(60vw,240px);padding:7px 10px;background:#fffaf0;border:2px solid #dfb98b;border-radius:16px;color:#69432d;box-shadow:0 3px 8px #53311d20;font-size:12px;font-weight:850;line-height:1.25;overflow-wrap:anywhere;pointer-events:none;white-space:normal}
+#gameView .social-player-bubble:after{content:"";position:absolute;left:17px;bottom:-7px;width:10px;height:10px;transform:rotate(45deg);background:#fffaf0;border-right:2px solid #dfb98b;border-bottom:2px solid #dfb98b}
+#gameView .social-player-bubble[hidden]{display:none!important}
+.social-invite-banner{position:fixed;top:calc(12px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:9999;background:#fffaf0;color:#68452e;border:2px solid #deb78d;box-shadow:0 8px 28px #59331f44;border-radius:17px;padding:13px;width:min(94vw,420px);display:flex;flex-direction:column;gap:8px}
+.social-invite-banner[hidden]{display:none!important}
+.social-invite-banner .social-invite-actions{display:flex;gap:8px;justify-content:flex-end}
+.social-invite-banner button{border-radius:11px;padding:8px 15px;border:1px solid #dbac7e;background:#f5d7af;color:#704734;font-weight:800}
+.social-invite-banner button.secondary{background:white}
+.social-invite-banner small{color:#97765f}
+#spectateView .social-spectator-only{margin-top:14px;text-align:center;font-weight:700;color:#886d58}
+@media(max-width:420px){.social-code{flex-wrap:wrap}.social-code code{flex:1;min-width:0;overflow-wrap:anywhere}.social-code #socialShareCode{margin-left:0}}
+
 </style>
 </head>
 <body class="onboarding-active">
@@ -791,7 +848,7 @@ body.home-active #twoPlayerBtn .duo-menu-art .fresh-duo-vs{position:absolute;lef
   <section class="surface shop-wrap"><h3 class="shop-tit">🐾 동물돌 스킨</h3><p class="animal-shop-intro">캐릭터를 한 번 구매하면 <strong>흑돌 + 백돌</strong> 모두 열려요. 마음에 드는 동물을 색상별로 따로 장착하세요!</p><div class="shop-grid" id="animalShop"></div><h3 class="shop-tit" style="margin-top:28px">🌼 오목판 스킨</h3><div class="shop-grid" id="boardShop"></div><p class="shop-note">🎁 카피바라와 토끼는 흑백돌 모두 무료예요. 구매 기록은 이 브라우저에 저장됩니다. 온라인 베타 대전은 코인 및 경험치 보상이 없어요.</p></section>
 </section>
 </main>
-<footer class="footer">말랑오목 v10.6.1 · 친구·관전·빠른 채팅 ♡</footer>
+<footer class="footer">말랑오목 v10.6.3 · 친구·관전·빠른 채팅 ♡</footer>
 </div>
 <div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><div class="dialog"><div class="art" id="dialogArt"></div><h2 id="dialogTitle">말랑오목</h2><p id="dialogText"></p><div id="dialogExtra"></div><div id="dialogButtons"></div></div></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -1818,6 +1875,7 @@ const fail=(e)=>{console.error('[말랑오목 소셜]',e);info(e?.code==='permis
 let api=null,db=null,me='',myCode='',connections=[],profiles=new Map(),profileSubs=[],connectionSub=null,heartbeat=null;
 let roomCode='',roomMode='',roomRole='',roomHost='',roomGuest='',roomSub=null,msgSub=null,lastSeenMessage=null,previousRoomHash='',lastWritePromise=Promise.resolve();
 let viewingCode='',viewSub=null,viewMessagesSub=null,lastChatAt=0,friendScreen=false;
+let duelInviteSub=null,duelInvite=null,duelInviteBusy=false;
 const mySave=()=>window.mallangCloudBridge?.getSave?.()||{};
 const myNick=()=>String(mySave().nickname||'말랑 친구').slice(0,10);
 const myAvatar=()=>String(mySave().profileAvatar||'capy').slice(0,25);
@@ -1827,7 +1885,7 @@ const escapeText=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','
 const friendKey=(a,b)=>[a,b].sort().join('_');
 const isLive=p=>p&&Date.now()-Number(p.lastSeen||0)<90000;
 function randomCode(length=9){const bytes=crypto.getRandomValues(new Uint8Array(length));return [...bytes].map(n=>codeAlphabet[n%codeAlphabet.length]).join('')}
-const wrap=document.createElement('div');wrap.id='mallangSocialRoot';wrap.innerHTML=`<section id="socialFriendsView" class="view social-view"><div class="social-heading"><button id="socialGoHome" class="backbtn" type="button">← 메인</button><h2>🐾 말랑 친구</h2></div><div class="social-card"><strong>내 친구 코드</strong><div class="social-code"><code id="socialMyCode">연결 중…</code><button id="socialCopyCode" type="button">복사</button></div><small>코드를 친구에게 알려주면 친구 신청을 받을 수 있어요.</small></div><div class="social-card"><strong>친구 추가</strong><div class="social-code"><input id="socialFriendInput" maxlength="30" placeholder="친구의 코드 9자리" autocomplete="off" spellcheck="false"><button id="socialAddFriend" type="button">신청</button></div><small id="socialNotice" aria-live="polite">친구 신청은 상대가 수락해야 완료돼요.</small></div><div class="social-card"><h3>받은 친구 신청 <span id="socialPendingCount"></span></h3><div id="socialIncoming" class="social-rows"></div></div><div class="social-card"><h3>친구 목록 <span id="socialFriendCount"></span></h3><div id="socialFriendList" class="social-rows"></div><div id="socialOutgoing" class="social-outgoing"></div></div></section><section id="spectateView" class="view social-view"><div class="social-heading"><button class="backbtn" id="socialExitWatch" type="button">← 나가기</button><h2>👀 실시간 관전</h2><span class="soft-tag">착수 불가</span></div><div class="social-card"><div class="social-match-name" id="socialMatchNames">대국 연결 중…</div><div class="social-watch-sub" id="socialWatchStatus">대국 상태를 확인하고 있어요.</div><div class="board-frame social-board-frame"><div class="board" id="socialWatchBoard" role="grid" aria-label="관전용 오목판"></div></div><div class="social-watch-sub">관전자는 돌을 둘 수 없고, 😂 😭 반응만 보낼 수 있어요.</div><div class="social-reactions"><button type="button" data-watch-reaction="😂">😂 웃음</button><button type="button" data-watch-reaction="😭">😭 울음</button></div><div class="social-chat-stream" id="socialWatchChat" aria-live="polite"></div></div></section>`;
+const wrap=document.createElement('div');wrap.id='mallangSocialRoot';wrap.innerHTML=`<section id="socialFriendsView" class="view social-view"><div class="social-heading"><button id="socialGoHome" class="backbtn" type="button">← 메인</button><h2>🐾 말랑 친구</h2></div><div class="social-card"><strong>내 친구 코드</strong><div class="social-code"><code id="socialMyCode">연결 중…</code><button id="socialCopyCode" type="button">복사</button><button id="socialShareCode" type="button">공유</button></div><small>코드를 친구에게 알려주면 친구 신청을 받을 수 있어요.</small></div><div class="social-card"><strong>친구 추가</strong><div class="social-code"><input id="socialFriendInput" maxlength="30" placeholder="친구의 코드 9자리" autocomplete="off" spellcheck="false"><button id="socialAddFriend" type="button">신청</button></div><small id="socialNotice" aria-live="polite">친구 신청은 상대가 수락해야 완료돼요.</small></div><div class="social-card"><h3>받은 친구 신청 <span id="socialPendingCount"></span></h3><div id="socialIncoming" class="social-rows"></div></div><div class="social-card"><h3>친구 목록 <span id="socialFriendCount"></span></h3><div id="socialFriendList" class="social-rows"></div><div id="socialOutgoing" class="social-outgoing"></div></div></section><section id="spectateView" class="view social-view"><div class="social-heading"><button class="backbtn" id="socialExitWatch" type="button">← 나가기</button><h2>👀 실시간 관전</h2><span class="soft-tag">착수 불가</span></div><div class="social-card"><div class="social-match-name" id="socialMatchNames">대국 연결 중…</div><div class="social-watch-sub" id="socialWatchStatus">대국 상태를 확인하고 있어요.</div><div class="board-frame social-board-frame"><div class="board" id="socialWatchBoard" role="grid" aria-label="관전용 오목판"></div></div><div class="social-spectator-only">👀 관전 전용 · 착수 및 채팅 불가</div></div></section>`;
 // Main uses .view panels as direct children. Append both panels to the same main.
 const main=document.querySelector('main');main.append(...wrap.children);
 const friendBtn=document.createElement('button');friendBtn.id='socialFriendsBtn';friendBtn.className='storybook-button blue social-home-button';friendBtn.type='button';friendBtn.innerHTML='<span class="menu-icon">🐾</span><span>친구 · 관전</span><span class="btn-shine">✦</span>';
@@ -1835,11 +1893,15 @@ document.querySelector('#homeView .home-menu')?.append(friendBtn);
 const gameChatButton=document.createElement('button');gameChatButton.id='socialGameChatBtn';gameChatButton.type='button';gameChatButton.className='sm-btn';gameChatButton.hidden=true;gameChatButton.innerHTML='<span aria-hidden="true">💬</span><span>빠른 채팅</span>';
 document.querySelector('#gameView .action-grid')?.append(gameChatButton);
 const chatPanel=document.createElement('section');chatPanel.id='socialGameChatPanel';chatPanel.className='social-card social-game-chat';chatPanel.hidden=true;
-chatPanel.innerHTML='<h3>💬 빠른 채팅 <small>정해진 문구만 전송할 수 있어요.</small></h3><div class="social-preset-grid"></div><div class="social-reactions"><button type="button" data-game-reaction="😂">😂</button><button type="button" data-game-reaction="😭">😭</button></div><div id="socialGameChatStream" class="social-chat-stream" aria-live="polite"></div>';
+chatPanel.innerHTML='<h3>💬 빠른 채팅 <small>정해진 문구만 전송할 수 있어요.</small></h3><div class="social-preset-grid"></div><div class="social-reactions"><button type="button" data-game-reaction="😂">😂</button><button type="button" data-game-reaction="😭">😭</button></div>';
 for(const msg of presets){const b=document.createElement('button');b.type='button';b.textContent=msg;b.addEventListener('click',()=>sendMessage('chat',msg));chatPanel.querySelector('.social-preset-grid').append(b)}
 document.querySelector('#gameView .compact-game-controls')?.append(chatPanel);
-const latestBubble=document.createElement('div');latestBubble.id='socialLatestBubble';latestBubble.className='social-latest-bubble';latestBubble.hidden=true;
-document.querySelector('#gameView .board-frame')?.append(latestBubble);
+// Message bubbles belong to the actual black / white player identity cards, not over the board.
+const bubbleBlack=document.createElement('div'),bubbleWhite=document.createElement('div');
+for (const [bubble,id] of [[bubbleBlack,'playerBlack'],[bubbleWhite,'playerWhite']]){
+ bubble.className='social-player-bubble';bubble.hidden=true;document.getElementById(id)?.append(bubble);
+}
+let bubbleTimer=null;
 
 async function withInit(){if(api&&me)return;for(let attempt=0;attempt<65;attempt++){const service=window.mallangSocialServices;if(service?.getFirestore?.()&&service?.getUid?.()){api=service.getFirestore();db=api.db;me=service.getUid();return}await sleep(400)}throw Error('Firebase 연결이 준비되지 않았어요. 상단 연결 상태를 확인해 주세요.')}
 async function ensureProfile(){
@@ -1880,6 +1942,7 @@ function drawFriends(){
  if(!incomingRows.length)incoming.textContent='새로운 신청이 없어요.';
  for(const c of accepted){const other=c.members.find(v=>v!==me),p=profiles.get(other);const online=isLive(p);const state=online?(p?.activeRoom?'대국 중':'접속 중'):'오프라인';const row=friendRow(p?.nickname||'말랑 친구',`${online?'🟢':'⚪'} ${state}`);
   if(online&&p.activeRoom)row.append(socialButton('관전',()=>void spectate(p.activeRoom)));
+  const fight=socialButton('대전 신청',()=>void challengeFriend(c,other,p));fight.disabled=!online||Boolean(p?.activeRoom);row.append(fight);
   row.append(socialButton('삭제',()=>void remove(c),true));friends.append(row);
  }
  if(!accepted.length)friends.textContent='아직 친구가 없어요. 코드를 공유해 보세요!';
@@ -1911,6 +1974,65 @@ async function invite(){
 }
 async function accept(c){try{await api.updateDoc(socialDoc('socialConnections',c.id),{status:'accepted'});info('친구가 되었어요!')}catch(e){fail(e)}}
 async function remove(c){try{await api.deleteDoc(socialDoc('socialConnections',c.id));info('목록을 정리했어요.')}catch(e){fail(e)}}
+
+// Share a friend invite. On iPhone the system Share Sheet is preferred.
+async function shareMyFriendCode(){
+ try{
+   await ensureProfile();if(!myCode)throw Error('친구 코드가 아직 준비되지 않았어요.');
+   const url=new URL(location.href);url.searchParams.delete('room');url.searchParams.set('friendCode',myCode);
+   const message=`말랑오목 친구하자! 친구 코드: ${myCode}`;
+   if(navigator.share){try{await navigator.share({title:'말랑오목 친구 초대',text:message,url:url.href});return}catch(e){if(e.name==='AbortError')return}}
+   const payload=message+'\n'+url.href;
+   if(navigator.clipboard?.writeText){await navigator.clipboard.writeText(payload);info('친구 코드와 링크를 복사했어요!')}
+   else window.prompt('친구 코드를 공유해 주세요',payload);
+ }catch(e){fail(e)}
+}
+// Friend-game invitations use an existing Cloudflare-authoritative room; Firestore is only signalling.
+async function challengeFriend(connection,friendUid,profile){
+ if(duelInviteBusy)return;
+ duelInviteBusy=true;
+ try{
+  await withInit();
+  if(!connection||connection.status!=='accepted'||!connection.members.includes(friendUid))throw Error('친구 관계를 확인해 주세요.');
+  if(!isLive(profile)||profile.activeRoom)throw Error('친구가 오프라인이거나 대국 중이에요.');
+  if(!window.mallangOnline?.createFriend)throw Error('온라인 서버 연결을 확인해주세요.');
+  const ref=socialDoc('socialInvites',friendUid),old=await api.getDoc(ref);
+  if(old.exists())throw Error('친구에게 이미 대전 신청이 있어요. 먼저 처리해 달라고 해 주세요.');
+  const code=await window.mallangOnline.createFriend(0);
+  try{
+   await api.setDoc(ref,{toUid:friendUid,fromUid:me,fromName:myNick(),roomCode:code,connectionId:connection.id,status:'pending',createdAt:api.serverTimestamp()});
+  }catch(e){await window.mallangOnline.cancelWaiting().catch(()=>{});throw e}
+  info('대전 신청을 보냈어요! 친구가 수락하면 대국이 시작돼요.');
+ }catch(e){fail(e)}finally{duelInviteBusy=false}
+}
+const inviteBanner=document.createElement('div');inviteBanner.id='socialDuelInviteBanner';inviteBanner.className='social-invite-banner';inviteBanner.hidden=true;
+inviteBanner.innerHTML='<strong id="socialDuelInviteTitle">친구가 대전을 신청했어요!</strong><small>수락하면 친구 온라인 대전으로 입장해요.</small><div class="social-invite-actions"><button id="socialDuelInviteReject" class="secondary" type="button">거절</button><button id="socialDuelInviteAccept" type="button">대전 수락</button></div>';
+document.body.append(inviteBanner);
+async function handleDuelInvite(accept){
+ if(duelInviteBusy||!duelInvite)return;
+ duelInviteBusy=true;
+ const invite=duelInvite;
+ try{
+  if(accept){
+    await window.mallangOnline.joinFriend(invite.roomCode);
+  }
+  await api.deleteDoc(socialDoc('socialInvites',me));
+  duelInvite=null;inviteBanner.hidden=true;
+ }catch(e){fail(e)}finally{duelInviteBusy=false}
+}
+function watchDuelInvites(){
+ if(duelInviteSub)return;
+ duelInviteSub=api.onSnapshot(socialDoc('socialInvites',me),snap=>{
+  const d=snap.exists()?snap.data():null;
+  if(!d||d.status!=='pending'){duelInvite=null;inviteBanner.hidden=true;return}
+  duelInvite=d;
+  const safeName=String(d.fromName||'친구').slice(0,10);
+  document.getElementById('socialDuelInviteTitle').textContent=safeName+'님이 대전을 신청했어요!';
+  inviteBanner.hidden=false;
+ },fail);
+}
+document.getElementById('socialDuelInviteAccept').addEventListener('click',()=>void handleDuelInvite(true));
+document.getElementById('socialDuelInviteReject').addEventListener('click',()=>void handleDuelInvite(false));
 async function showFriends(){
  friendScreen=true;viewingCode='';stopWatching();document.querySelectorAll('main>.view').forEach(v=>v.classList.remove('active'));$('socialFriendsView').classList.add('active');document.body.classList.remove('home-active');window.scrollTo(0,0);
  try{await ensureProfile();if(friendScreen)watchFriends()}catch(e){fail(e)}
@@ -1933,14 +2055,22 @@ async function mirrorRoom(room,heartbeatOnly=false){
  lastWritePromise=lastWritePromise.catch(()=>{}).then(()=>api.setDoc(socialDoc('socialRooms',clean.code),{...clean,updatedMs:Date.now()}, {merge:true}));
  try{await lastWritePromise}catch(e){console.warn('spectator mirror',e)}
 }
-function stopMessages(){if(msgSub){msgSub();msgSub=null}roomCode='';lastSeenMessage=null;roomRole='';roomMode='';roomHost='';roomGuest='';lastRoomState=null;previousRoomHash='';$('socialGameChatBtn').hidden=true;$('socialGameChatPanel').hidden=true;latestBubble.hidden=true}
+function stopMessages(){if(msgSub){msgSub();msgSub=null}roomCode='';lastSeenMessage=null;roomRole='';roomMode='';roomHost='';roomGuest='';lastRoomState=null;previousRoomHash='';$('socialGameChatBtn').hidden=true;$('socialGameChatPanel').hidden=true;clearTimeout(bubbleTimer);bubbleBlack.hidden=true;bubbleWhite.hidden=true}
 function showChatEntries(snap,targetId,role){
- const target=$(targetId);if(!target)return;const rows=snap.docs.map(d=>({id:d.id,...d.data()})).reverse().slice(-30);
- target.replaceChildren();for(const m of rows){if((m.kind==='chat'&&!presets.includes(m.text))||(m.kind==='reaction'&&!reactions.includes(m.text)))continue;
- const item=document.createElement('div');item.className='social-message'+(m.senderUid===me?' mine':'');const name=document.createElement('span');name.className='social-message-name';name.textContent=m.senderName||'말랑 친구';const body=document.createElement('span');body.textContent=m.text;item.append(name,body);target.append(item)}
- target.scrollTop=target.scrollHeight;
- const newest=rows.at(-1);if(role==='player'&&newest&&lastSeenMessage&&newest.id!==lastSeenMessage){const item=rows.at(-1);latestBubble.textContent=`${item.senderName||'친구'}: ${item.text}`;latestBubble.hidden=false;clearTimeout(window.__mallangBubbleTimer);window.__mallangBubbleTimer=setTimeout(()=>latestBubble.hidden=true,2800)}
- if(newest)lastSeenMessage=newest.id;
+ if(role!=='player')return;
+ const newest=snap.docs[0];
+ if(!newest)return;
+ if(lastSeenMessage===null){lastSeenMessage=newest.id;return}
+ if(lastSeenMessage===newest.id)return;
+ lastSeenMessage=newest.id;
+ const msg=newest.data();
+ if(msg.kind==='chat'&&!presets.includes(msg.text))return;
+ if(msg.kind==='reaction'&&!reactions.includes(msg.text))return;
+ if(![roomHost,roomGuest].includes(msg.senderUid))return;
+ const hostIsBlack=Number(lastRoomState?.hostColor)===1;
+ const bubble=(msg.senderUid===roomHost) === hostIsBlack ? bubbleBlack:bubbleWhite;
+ bubble.textContent=msg.text;bubble.hidden=false;
+ clearTimeout(bubbleTimer);bubbleTimer=setTimeout(()=>{bubbleBlack.hidden=true;bubbleWhite.hidden=true},3600);
 }
 function attachGameChat(code){if(roomCode===code&&msgSub)return;msgSub?.();roomCode=code;lastSeenMessage=null;
  const q=api.query(socialCol('socialRooms',code,'messages'),api.orderBy('createdAt','desc'),api.limit(30));
@@ -1951,7 +2081,7 @@ async function sendMessage(kind,text){
   if(!api||!me)throw Error('로그인 연결 중이에요.');
   const isViewer=Boolean(viewingCode),code=isViewer?viewingCode:roomCode;
   if(!code)throw Error('진행 중인 대국이 없어요.');
-  if(isViewer&&(kind!=='reaction'||!reactions.includes(text)))throw Error('관전자는 이모지 반응만 보낼 수 있어요.');
+  if(isViewer)throw Error('관전 중에는 채팅을 보낼 수 없어요.');
   if(kind==='chat'&&!presets.includes(text)||kind==='reaction'&&!reactions.includes(text))throw Error('허용되지 않는 반응이에요.');
   if(Date.now()-lastChatAt<1600)throw Error('조금만 천천히 보내주세요!');
   const ref=socialDoc('socialRooms',code),snap=await api.getDoc(ref);if(!snap.exists())throw Error('대국 정보가 사라졌어요.');
@@ -1963,7 +2093,7 @@ async function sendMessage(kind,text){
 function stopWatching(){viewSub?.();viewSub=null;viewMessagesSub?.();viewMessagesSub=null;viewingCode=''}
 function renderSpectator(r){
  const black=r.hostColor===1?r.hostName:r.guestName,white=r.hostColor===2?r.hostName:r.guestName;
- $('socialMatchNames').textContent=`⚫ ${black||'친구'}  VS  ⚪ ${white||'친구'}`;
+ $('socialMatchNames').textContent=`⚫ 흑 · ${black||'친구'}     |     ⚪ 백 · ${white||'친구'}`;
  const moves=Array.isArray(r.moves)?r.moves:[];
  $('socialWatchStatus').textContent=r.status==='finished'?`대국 종료 · ${Number(r.winner)===0?'무승부':Number(r.winner)===1?'흑돌 승리':'백돌 승리'} · ${moves.length}수`:r.status==='cancelled'?'대국이 취소됐어요.':`실시간 관전 · ${moves.length}수 · ${r.turn===1?'흑돌':'백돌'} 차례`;
  const board=$('socialWatchBoard');board.className='board theme-'+(mySave().theme||'wood');
@@ -1989,8 +2119,6 @@ async function spectate(code){
   stopWatching();viewingCode=id;lastSeenMessage=null;document.querySelectorAll('main>.view').forEach(v=>v.classList.remove('active'));$('spectateView').classList.add('active');document.body.classList.remove('home-active');
   const watchId=id;
   viewSub=api.onSnapshot(ref,s=>{if(viewingCode===watchId&&s.exists())renderSpectator(s.data())},e=>{console.warn('spectate',e);$('socialWatchStatus').textContent='관전 연결이 끊겼어요.'});
-  const q=api.query(socialCol('socialRooms',id,'messages'),api.orderBy('createdAt','desc'),api.limit(30));
-  viewMessagesSub=api.onSnapshot(q,s=>{if(viewingCode===watchId)showChatEntries(s,'socialWatchChat','viewer')},e=>console.warn('watch messages',e));
   window.scrollTo(0,0);
  }catch(e){fail(e)}
 }
@@ -2022,18 +2150,52 @@ function installHooks(){
  $('brandBtn')?.addEventListener('click',()=>{friendScreen=false;stopWatching();$('socialFriendsView').classList.remove('active');$('spectateView').classList.remove('active')});
 }
 async function start(){
- try{await ensureProfile();watchFriends();installHooks();await markPresence({activeRoom:''});heartbeat=setInterval(refreshPresence,30000);document.addEventListener('visibilitychange',refreshPresence);
+ try{await ensureProfile();watchFriends();installHooks();watchDuelInvites();await markPresence({activeRoom:''});heartbeat=setInterval(refreshPresence,30000);document.addEventListener('visibilitychange',refreshPresence);
  // Some initial renders can start before Firebase is ready; friend screen remains retryable.
  }catch(e){console.warn('social startup',e);info('친구 기능 연결을 확인해 주세요. 홈의 친구 버튼으로 다시 시도할 수 있어요.')}
 }
 friendBtn.onclick=()=>void showFriends();$('socialGoHome').onclick=goHome;$('socialExitWatch').onclick=goHome;
 $('socialAddFriend').onclick=()=>void invite();$('socialFriendInput').addEventListener('keydown',e=>{if(e.key==='Enter')void invite()});
+$('socialShareCode').onclick=()=>void shareMyFriendCode();
 $('socialCopyCode').onclick=()=>{if(!myCode)return;void navigator.clipboard?.writeText(myCode).then(()=>info('친구 코드가 복사됐어요!')).catch(()=>window.prompt('친구 코드',myCode))};
-gameChatButton.onclick=()=>{chatPanel.hidden=!chatPanel.hidden};
+gameChatButton.onclick=()=>{chatPanel.hidden=!chatPanel.hidden;};
 for(const b of document.querySelectorAll('[data-game-reaction]'))b.addEventListener('click',()=>void sendMessage('reaction',b.dataset.gameReaction));
-for(const b of document.querySelectorAll('[data-watch-reaction]'))b.addEventListener('click',()=>void sendMessage('reaction',b.dataset.watchReaction));
+
 window.mallangSocial={showFriends,spectate,sendMessage,stopWatching};
 void start();
+// The generated friend-link pre-fills the receiver's code input; it never auto-sends a request.
+const sharedCode=new URL(location.href).searchParams.get('friendCode');
+if(sharedCode&&/^[A-HJ-NP-Z2-9]{9}$/.test(sharedCode.toUpperCase())){
+ setTimeout(()=>{void showFriends().then(()=>{$('socialFriendInput').value=sharedCode.toUpperCase();info('친구 코드가 입력됐어요. 신청 버튼을 눌러주세요.');})},900);
+}
+})();
+</script>
+
+<script>/* v10.6.3 height-responsive gomoku board, not a scrolling page */
+(()=>{
+  let pending=0,lastSize=0;
+  const $=s=>document.querySelector(s);
+  function fit(){
+    pending=0;
+    const v=$('#gameView'),frame=$('#gameView .board-frame');
+    if(!v?.classList.contains('active')||!frame||window.innerWidth>850)return;
+    const height=window.visualViewport?.height||window.innerHeight;
+    const bottomPad=parseFloat(getComputedStyle($('.app')).paddingBottom)||0;
+    const below=$('#gameView .board-below')?.getBoundingClientRect().height||19;
+    const side=$('#gameView .game-side')?.getBoundingClientRect().height||90;
+    const available=height-frame.getBoundingClientRect().top-below-side-bottomPad-16;
+    const width=Math.max(130,Math.floor(Math.min(window.innerWidth-18,540,available)));
+    if(Math.abs(width-lastSize)>1){lastSize=width;document.documentElement.style.setProperty('--mallang-board-fit',width+'px')}
+  }
+  function schedule(){if(pending)return;pending=requestAnimationFrame(fit)}
+  window.addEventListener('resize',schedule,{passive:true});
+  window.addEventListener('orientationchange',schedule,{passive:true});
+  window.visualViewport?.addEventListener('resize',schedule,{passive:true});
+  new MutationObserver(schedule).observe(document.getElementById('gameView'),{attributes:true,attributeFilter:['class']});
+  new MutationObserver(schedule).observe(document.querySelector('#gameView .action-grid'),{childList:true,subtree:true,attributes:true,attributeFilter:['hidden']});
+  document.addEventListener('visibilitychange',schedule);
+  window.mallangFitGameScreen=schedule;
+  schedule();
 })();
 </script>
 </body>
