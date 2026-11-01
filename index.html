@@ -2051,30 +2051,42 @@ async function mirrorRoom(room,heartbeatOnly=false){
  if(![clean.hostUid,clean.guestUid].includes(me))return;
  const fingerprint=JSON.stringify(clean);
  if(fingerprint===previousRoomHash&&!heartbeatOnly)return;
- previousRoomHash=fingerprint;
+ // Only mark a state as mirrored AFTER Firestore accepts it. Failed writes must be retried.
  lastWritePromise=lastWritePromise.catch(()=>{}).then(()=>api.setDoc(socialDoc('socialRooms',clean.code),{...clean,updatedMs:Date.now()}, {merge:true}));
- try{await lastWritePromise}catch(e){console.warn('spectator mirror',e)}
+ try{await lastWritePromise;previousRoomHash=fingerprint}
+ catch(e){previousRoomHash='';console.warn('spectator mirror',e);throw e}
 }
 function stopMessages(){if(msgSub){msgSub();msgSub=null}roomCode='';lastSeenMessage=null;roomRole='';roomMode='';roomHost='';roomGuest='';lastRoomState=null;previousRoomHash='';$('socialGameChatBtn').hidden=true;$('socialGameChatPanel').hidden=true;clearTimeout(bubbleTimer);bubbleBlack.hidden=true;bubbleWhite.hidden=true}
-function showChatEntries(snap,targetId,role){
- if(role!=='player')return;
- const newest=snap.docs[0];
- if(!newest)return;
- if(lastSeenMessage===null){lastSeenMessage=newest.id;return}
- if(lastSeenMessage===newest.id)return;
- lastSeenMessage=newest.id;
- const msg=newest.data();
+let chatSubscribedAt=0;
+function showPlayerBubble(msg){
  if(msg.kind==='chat'&&!presets.includes(msg.text))return;
  if(msg.kind==='reaction'&&!reactions.includes(msg.text))return;
  if(![roomHost,roomGuest].includes(msg.senderUid))return;
  const hostIsBlack=Number(lastRoomState?.hostColor)===1;
  const bubble=(msg.senderUid===roomHost) === hostIsBlack ? bubbleBlack:bubbleWhite;
+ bubbleBlack.hidden=true;bubbleWhite.hidden=true;
  bubble.textContent=msg.text;bubble.hidden=false;
  clearTimeout(bubbleTimer);bubbleTimer=setTimeout(()=>{bubbleBlack.hidden=true;bubbleWhite.hidden=true},3600);
 }
-function attachGameChat(code){if(roomCode===code&&msgSub)return;msgSub?.();roomCode=code;lastSeenMessage=null;
- const q=api.query(socialCol('socialRooms',code,'messages'),api.orderBy('createdAt','desc'),api.limit(30));
- msgSub=api.onSnapshot(q,s=>showChatEntries(s,'socialGameChatStream','player'),e=>console.warn('chat read',e));
+function showChatEntries(snap,targetId,role){
+ if(role!=='player')return;
+ const newest=snap.docs[0];
+ if(!newest)return; // The first empty snapshot is normal: do NOT skip the next (first) chat.
+ if(lastSeenMessage===newest.id)return;
+ lastSeenMessage=newest.id;
+ const msg=newest.data();
+ // Suppress old history on entry, but never swallow a new first message.
+ const sentAt=msg.createdAt?.toMillis?.()||Date.now();
+ if(sentAt<chatSubscribedAt-4000)return;
+ showPlayerBubble(msg);
+}
+function attachGameChat(code){if(roomCode===code&&msgSub)return;msgSub?.();roomCode=code;lastSeenMessage=null;chatSubscribedAt=Date.now();
+ // Only the latest message is needed for short-lived speech bubbles.
+ const q=api.query(socialCol('socialRooms',code,'messages'),api.orderBy('createdAt','desc'),api.limit(1));
+ msgSub=api.onSnapshot(q,s=>showChatEntries(s,'socialGameChatStream','player'),e=>{
+  console.warn('quick chat subscription',e);
+  if(roomCode===code){const hint=document.createElement('small');hint.textContent=e?.code==='permission-denied'?'빠른 채팅 권한이 거부됐어요. Firebase 규칙을 확인해주세요.':'빠른 채팅 연결 오류: '+(e?.message||'알 수 없음');chatPanel.append(hint);setTimeout(()=>hint.remove(),6000)}
+ });
 }
 async function sendMessage(kind,text){
  try{
@@ -2082,13 +2094,26 @@ async function sendMessage(kind,text){
   const isViewer=Boolean(viewingCode),code=isViewer?viewingCode:roomCode;
   if(!code)throw Error('진행 중인 대국이 없어요.');
   if(isViewer)throw Error('관전 중에는 채팅을 보낼 수 없어요.');
-  if(kind==='chat'&&!presets.includes(text)||kind==='reaction'&&!reactions.includes(text))throw Error('허용되지 않는 반응이에요.');
+  if((kind==='chat'&&!presets.includes(text))||(kind==='reaction'&&!reactions.includes(text)))throw Error('허용되지 않는 반응이에요.');
   if(Date.now()-lastChatAt<1600)throw Error('조금만 천천히 보내주세요!');
-  const ref=socialDoc('socialRooms',code),snap=await api.getDoc(ref);if(!snap.exists())throw Error('대국 정보가 사라졌어요.');
-  const r=snap.data();if(!isViewer&&![r.hostUid,r.guestUid].includes(me))throw Error('대국 참가자만 빠른 채팅을 보낼 수 있어요.');
+  // The parent spectator room is created asynchronously when the game starts.
+  // Ensure it exists before checking permissions or writing its message subcollection.
+  await lastWritePromise.catch(()=>{});
+  const ref=socialDoc('socialRooms',code);
+  let snap=await api.getDoc(ref);
+  if(!snap.exists()&&lastRoomState?.code===code){
+   await mirrorRoom(lastRoomState);
+   snap=await api.getDoc(ref);
+  }
+  if(!snap.exists())throw Error('빠른 채팅용 대국 정보가 아직 저장되지 않았어요. 잠시 후 다시 시도해주세요.');
+  const r=snap.data();if(![r.hostUid,r.guestUid].includes(me))throw Error('대국 참가자만 빠른 채팅을 보낼 수 있어요.');
   if(r.status!=='playing')throw Error('진행 중인 대국에서만 보낼 수 있어요.');
-  lastChatAt=Date.now();await api.addDoc(socialCol('socialRooms',code,'messages'),{senderUid:me,senderName:myNick(),kind,text,createdAt:api.serverTimestamp()});
- }catch(e){console.warn(e);if(viewingCode){$('socialWatchStatus').textContent=e.message}else{const hint=document.createElement('small');hint.textContent=e.message;chatPanel.append(hint);setTimeout(()=>hint.remove(),2500)}}
+  const result=await api.addDoc(socialCol('socialRooms',code,'messages'),{senderUid:me,senderName:myNick(),kind,text,createdAt:api.serverTimestamp()});
+  lastChatAt=Date.now();chatPanel.hidden=true;
+  if(result?.id)lastSeenMessage=result.id;
+  // Sender sees their own bubble immediately, without waiting for a Firestore echo.
+  showPlayerBubble({senderUid:me,kind,text});
+ }catch(e){console.warn('quick chat send',e);const hint=document.createElement('small');hint.textContent=e?.code==='permission-denied'?'채팅 권한이 거부됐어요. Firebase 규칙을 확인해주세요.':(e?.message||'빠른 채팅 전송 실패');chatPanel.append(hint);setTimeout(()=>hint.remove(),6000)}
 }
 function stopWatching(){viewSub?.();viewSub=null;viewMessagesSub?.();viewMessagesSub=null;viewingCode=''}
 function renderSpectator(r){
@@ -2130,7 +2155,7 @@ function trackRoom(r){
  roomHost=r.hostUid;roomGuest=r.guestUid;roomMode=r.type||'friend';roomRole='player';lastRoomState=r;
  $('socialGameChatBtn').hidden=false;
  if(r.status==='playing')void markPresence({activeRoom:code});else void markPresence({activeRoom:''});
- void mirrorRoom(r);
+ void mirrorRoom(r).catch(e=>console.warn('spectator relay pending',e));
 }
 function leaveTracked(){
  if(!roomCode)return;const endedCode=roomCode;
