@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="mobile-web-app-capable" content="yes">
-<title>말랑오목 v10.6.4 - 친구 대전 화면 전환 수정</title>
+<title>말랑오목 v10.7.3 - 온라인 턴 진행바</title>
 <style>
 :root{--ink:#654533;--brown:#7a533e;--muted:#9e806a;--cream:#fff7e9;--card:#fffaf1;--line:#ead5b9;--pink:#f5a4a7;--green:#a4c9a0;--blue:#9bd3e5;--yellow:#f9d47e;--shadow:0 9px 25px #76553d19;--wood:#eec993;--grid:#b88455;--btnshadow:#8e5f46;font-family:ui-rounded,'Apple SD Gothic Neo','Noto Sans KR','Malgun Gothic',system-ui,sans-serif;color:var(--ink)}
 *{box-sizing:border-box}html{background:#fff5e7}body{margin:0;min-width:300px;min-height:100dvh;background:radial-gradient(ellipse at top left,#ffeacb 0,transparent 44%),radial-gradient(ellipse at bottom right,#e9f1d3 0,transparent 42%),#fff5e7;-webkit-font-smoothing:antialiased}button,input{font:inherit}button{cursor:pointer;color:inherit;touch-action:manipulation;-webkit-tap-highlight-color:transparent}button:focus-visible,input:focus-visible{outline:3px solid #86b5ad;outline-offset:3px}.app{width:min(100%,1100px);margin:auto;min-height:100dvh;padding:14px 24px 35px;position:relative}.app:before{content:'✿';pointer-events:none;position:fixed;right:-21px;top:20%;font-size:110px;color:#f8d3b7;opacity:.34;z-index:-1}.topbar{height:67px;display:flex;align-items:center;justify-content:space-between;gap:12px}.brand{display:flex;align-items:center;gap:8px;border:0;background:none;font-size:26px;font-weight:1000;letter-spacing:-1.7px;color:#73492f;text-shadow:1px 2px #fff;white-space:nowrap}.brand .leaf{display:inline-grid;place-items:center;width:38px;height:38px;border-radius:14px;background:#a8d4ab;border:2px solid #759b76;font-size:23px;box-shadow:0 3px #789e80}.top-actions{display:flex;align-items:center;gap:8px}.top-chip{border:2px solid #e8d4b5;border-radius:30px;background:#fffaf0;padding:9px 12px;font-size:13px;font-weight:900;box-shadow:0 3px #eddfc9}.top-chip .coin{color:#d89527}.iconbtn{width:43px;height:43px;border:2px solid #ebd7c0;border-radius:14px;background:#fffaf0;font-size:22px;box-shadow:0 3px #eddfc9}.view{display:none;animation:appear .25s ease}.view.active{display:block}@keyframes appear{from{opacity:.7;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
@@ -756,6 +756,29 @@ body.home-active #twoPlayerBtn .duo-menu-art .fresh-duo-vs{position:absolute;lef
 #gameView .turn-clock.clock-urgent{background:#ffe6db;border-color:#da8979;color:#bb493e}
 #gameView .turn-well.clock-active .turn-deco{display:none!important}
 @media(max-width:480px){#gameView .turn-clock{font-size:10px;min-width:39px;height:22px;padding:0 4px}#gameView .turn-well.clock-active .turn-copy{min-width:0;flex:1}}
+/* v10.7.3: top-of-board online turn meter. Takes up the reserved chat-bubble gap
+   on phones, so game board and controls do not move or shrink. */
+#gameView .online-turn-bar[hidden]{display:none!important}
+#gameView .online-turn-bar{position:relative;box-sizing:border-box;width:100%;height:27px;flex:none;border:1.5px solid #ddc5a9;border-radius:12px;overflow:hidden;background:#f4e8d6;color:#5e4d34;box-shadow:0 1px 0 #e6d2bb;pointer-events:none}
+#gameView .online-turn-bar .turn-bar-track{position:absolute;inset:0;border-radius:inherit;overflow:hidden;background:#f5ead9}
+#gameView .online-turn-bar .turn-bar-fill{width:100%;height:100%;border-radius:0 7px 7px 0;background:linear-gradient(90deg,#b6d3a6,#a2c899);transition:width .23s linear,background-color .2s}
+#gameView .online-turn-bar.turn-warning .turn-bar-fill{background:linear-gradient(90deg,#f4d788,#edc76c)}
+#gameView .online-turn-bar.turn-urgent .turn-bar-fill{background:linear-gradient(90deg,#efb2a3,#e79788)}
+#gameView .online-turn-bar .turn-bar-info{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;height:100%;padding:0 12px;font-size:12px;font-weight:900;text-shadow:0 1px #fff9}
+#gameView .online-turn-bar .turn-bar-seconds{flex:0 0 auto;font-size:13px;min-width:36px;text-align:right;font-variant-numeric:tabular-nums;font-weight:1000;color:#714b34}
+#gameView .online-turn-bar.turn-urgent .turn-bar-seconds{color:#a83f36}
+@media(max-width:850px){
+  #gameView .game-main{position:relative!important}
+  #gameView .online-turn-bar{position:absolute;top:1px;left:4px;right:4px;width:calc(100% - 8px);height:25px;z-index:1}
+  #gameView .online-turn-bar .turn-bar-info{padding:0 10px;font-size:11px}
+  #gameView .online-turn-bar .turn-bar-seconds{font-size:12px}
+  #gameView .players{position:relative;z-index:2}
+}
+@media(max-width:850px) and (max-height:620px){
+  #gameView .online-turn-bar{height:20px;top:1px}
+  #gameView .online-turn-bar .turn-bar-info{font-size:10px}
+}
+
 </style>
 </head>
 <body class="onboarding-active">
@@ -820,7 +843,12 @@ body.home-active #twoPlayerBtn .duo-menu-art .fresh-duo-vs{position:absolute;lef
 </section>
 <section class="view" id="gameView">
  <div class="page-heading"><button class="backbtn" id="gameBack">← 메인</button><h2 id="gameTitle">AI 대전</h2><span class="soft-tag" id="ruleTag">렌주룰 베타</span></div>
- <div class="game-layout"><section class="surface game-main"><div class="players"><div class="player turn" id="playerBlack"><span class="avatar" id="avatarBlack"></span><div><div class="who" id="blackName">카피바라</div><div class="under">흑돌 · 선공</div></div></div><span class="versus">VS</span><div class="player" id="playerWhite"><span class="avatar" id="avatarWhite"></span><div><div class="who" id="whiteName">토끼</div><div class="under">백돌 · 후공</div></div></div></div>
+ <div class="game-layout"><section class="surface game-main">
+   <div id="onlineTurnBar" class="online-turn-bar" role="group" aria-label="온라인 착수 제한시간" hidden>
+    <div class="turn-bar-track" aria-hidden="true"><div id="onlineTurnFill" class="turn-bar-fill"></div></div>
+    <span class="turn-bar-info"><span id="onlineTurnLabel">내 차례</span><span id="turnClock" class="turn-bar-seconds" role="timer" aria-label="남은 착수 시간">45초</span></span>
+   </div>
+   <div class="players"><div class="player turn" id="playerBlack"><span class="avatar" id="avatarBlack"></span><div><div class="who" id="blackName">카피바라</div><div class="under">흑돌 · 선공</div></div></div><span class="versus">VS</span><div class="player" id="playerWhite"><span class="avatar" id="avatarWhite"></span><div><div class="who" id="whiteName">토끼</div><div class="under">백돌 · 후공</div></div></div></div>
    <div class="board-frame"><div class="board" id="board" role="grid" aria-label="15 곱하기 15 오목판"></div></div>
    <div id="moveConfirm" class="move-confirm" hidden aria-live="polite">
     <div class="preview-label"><span class="preview-icon" id="pendingAvatar"></span><span><strong id="pendingCoords">8행 8열</strong><small>이 위치에 돌을 둘까요?</small></span></div>
@@ -830,7 +858,7 @@ body.home-active #twoPlayerBtn .duo-menu-art .fresh-duo-vs{position:absolute;lef
   </section>
   <aside class="game-side" aria-label="게임 조작과 도움말">
    <section class="surface compact-game-controls">
-    <div class="turn-well"><span class="face" id="turnFace"></span><div class="turn-copy"><strong id="turnLabel">카피바라 차례</strong><small id="modeSub">AI 대전 · 보통</small></div><span id="turnClock" class="turn-clock" role="timer" aria-label="남은 착수 시간" hidden></span><span class="turn-deco" aria-hidden="true">✿ 지금 차례</span></div>
+    <div class="turn-well"><span class="face" id="turnFace"></span><div class="turn-copy"><strong id="turnLabel">카피바라 차례</strong><small id="modeSub">AI 대전 · 보통</small></div><span class="turn-deco" aria-hidden="true">✿ 지금 차례</span></div>
     <div class="action-grid">
      <button class="sm-btn" id="undoBtn"><span aria-hidden="true">↶</span><span>무르기</span></button>
      <button class="sm-btn" id="resetGameBtn"><span aria-hidden="true">↻</span><span>다시하기</span></button>
@@ -1070,15 +1098,24 @@ function showRandomWaiting(){
  extra:'<div class="online-wait-spinner" aria-hidden="true"></div><div class="online-room-tip">흑돌·백돌은 매칭될 때 랜덤으로 배정돼요.</div>',
  buttons:[{label:'매칭 취소',alt:true,run:()=>{closeDialog();void onlineCall('cancelWaiting')}}]});
 }
-// v10.7.2: the Worker owns the timer; this readout only displays its deadline.
+// v10.7.3: only display the authoritative Cloudflare 45-second deadline.
+// The bar is visual only: timeout and resignation remain server decisions.
 function updateOnlineTurnClock(){
- const clock=$('turnClock'),well=clock?.closest('.turn-well');if(!clock||!well)return;
+ const bar=$('onlineTurnBar'),clock=$('turnClock'),fill=$('onlineTurnFill'),label=$('onlineTurnLabel');
+ if(!bar||!clock||!fill||!label)return;
  const show=game.mode==='online'&&!game.ended&&Number.isFinite(game.onlineTurnDeadlineAt)&&game.onlineTurnDeadlineAt>0;
- clock.classList.toggle('clock-on',show);well.classList.toggle('clock-active',show);
- if(!show){clock.hidden=true;return}
- clock.hidden=false;
- const seconds=Math.max(0,Math.ceil((game.onlineTurnDeadlineAt-(Date.now()+Number(game.onlineClockOffset||0)))/1000));
- clock.textContent=seconds+'초';clock.classList.toggle('clock-urgent',seconds<=10);
+ bar.hidden=!show;
+ const well=document.querySelector('#gameView .turn-well');
+ if(well)well.classList.toggle('clock-active',show);
+ if(!show)return;
+ const remainingMs=Math.max(0,Math.min(45000,game.onlineTurnDeadlineAt-(Date.now()+Number(game.onlineClockOffset||0))));
+ const seconds=Math.ceil(remainingMs/1000);
+ const percent=remainingMs/45000*100;
+ fill.style.width=percent.toFixed(3)+'%';
+ clock.textContent=seconds+'초';
+ label.textContent=game.turn===game.playerColor?'내 차례':'상대 차례';
+ bar.classList.toggle('turn-warning',seconds<=20&&seconds>10);
+ bar.classList.toggle('turn-urgent',seconds<=10);
 }
 setInterval(updateOnlineTurnClock,250);
 function onlineGameStart(room,uid){
