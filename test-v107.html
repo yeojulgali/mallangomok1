@@ -749,6 +749,13 @@ body.home-active #twoPlayerBtn .duo-menu-art .fresh-duo-vs{position:absolute;lef
 #spectateView .social-spectator-only{margin-top:14px;text-align:center;font-weight:700;color:#886d58}
 @media(max-width:420px){.social-code{flex-wrap:wrap}.social-code code{flex:1;min-width:0;overflow-wrap:anywhere}.social-code #socialShareCode{margin-left:0}}
 
+
+/* v10.7.2: compact online turn timer; never changes the board dimensions. */
+#gameView .turn-clock{display:none;flex:none;align-items:center;justify-content:center;min-width:45px;height:24px;padding:0 6px;border-radius:9px;border:1px solid #d5a06c;background:#fff8e9;color:#87552e;font-size:12px;font-weight:1000;white-space:nowrap;font-variant-numeric:tabular-nums}
+#gameView .turn-clock.clock-on{display:inline-flex!important}
+#gameView .turn-clock.clock-urgent{background:#ffe6db;border-color:#da8979;color:#bb493e}
+#gameView .turn-well.clock-active .turn-deco{display:none!important}
+@media(max-width:480px){#gameView .turn-clock{font-size:10px;min-width:39px;height:22px;padding:0 4px}#gameView .turn-well.clock-active .turn-copy{min-width:0;flex:1}}
 </style>
 </head>
 <body class="onboarding-active">
@@ -823,7 +830,7 @@ body.home-active #twoPlayerBtn .duo-menu-art .fresh-duo-vs{position:absolute;lef
   </section>
   <aside class="game-side" aria-label="게임 조작과 도움말">
    <section class="surface compact-game-controls">
-    <div class="turn-well"><span class="face" id="turnFace"></span><div class="turn-copy"><strong id="turnLabel">카피바라 차례</strong><small id="modeSub">AI 대전 · 보통</small></div><span class="turn-deco" aria-hidden="true">✿ 지금 차례</span></div>
+    <div class="turn-well"><span class="face" id="turnFace"></span><div class="turn-copy"><strong id="turnLabel">카피바라 차례</strong><small id="modeSub">AI 대전 · 보통</small></div><span id="turnClock" class="turn-clock" role="timer" aria-label="남은 착수 시간" hidden></span><span class="turn-deco" aria-hidden="true">✿ 지금 차례</span></div>
     <div class="action-grid">
      <button class="sm-btn" id="undoBtn"><span aria-hidden="true">↶</span><span>무르기</span></button>
      <button class="sm-btn" id="resetGameBtn"><span aria-hidden="true">↻</span><span>다시하기</span></button>
@@ -1063,6 +1070,17 @@ function showRandomWaiting(){
  extra:'<div class="online-wait-spinner" aria-hidden="true"></div><div class="online-room-tip">흑돌·백돌은 매칭될 때 랜덤으로 배정돼요.</div>',
  buttons:[{label:'매칭 취소',alt:true,run:()=>{closeDialog();void onlineCall('cancelWaiting')}}]});
 }
+// v10.7.2: the Worker owns the timer; this readout only displays its deadline.
+function updateOnlineTurnClock(){
+ const clock=$('turnClock'),well=clock?.closest('.turn-well');if(!clock||!well)return;
+ const show=game.mode==='online'&&!game.ended&&Number.isFinite(game.onlineTurnDeadlineAt)&&game.onlineTurnDeadlineAt>0;
+ clock.classList.toggle('clock-on',show);well.classList.toggle('clock-active',show);
+ if(!show){clock.hidden=true;return}
+ clock.hidden=false;
+ const seconds=Math.max(0,Math.ceil((game.onlineTurnDeadlineAt-(Date.now()+Number(game.onlineClockOffset||0)))/1000));
+ clock.textContent=seconds+'초';clock.classList.toggle('clock-urgent',seconds<=10);
+}
+setInterval(updateOnlineTurnClock,250);
 function onlineGameStart(room,uid){
  const amHost=uid===room.hostUid;
  const playerColor=amHost?room.hostColor:3-room.hostColor;
@@ -1088,14 +1106,18 @@ function onlineGameStart(room,uid){
  }
  game.turn=Number(room.turn)||1;
  game.ended=room.status==='finished';
+ game.onlineTurnDeadlineAt=Number(room.turnDeadlineAt)||0;
+ if(Number.isFinite(Number(room.serverNow))&&Number(room.serverNow)>0)game.onlineClockOffset=Number(room.serverNow)-Date.now();
  if(game.ended&&game.history.length){const [r,c]=game.history.at(-1);game.winners=winAfter(game.board,r,c,game.board[idx(r,c)]).cells}
  game.isThinking=false;pendingMove=null;
  $('blackName').textContent=game.onlineBlackName+(playerColor===1?' · 나':' · 상대');
  $('whiteName').textContent=game.onlineWhiteName+(playerColor===2?' · 나':' · 상대');
  $('modeSub').textContent='온라인 대전 · 방 '+room.code+' · '+(playerColor===1?'흑돌':'백돌');
- renderBoard();
+ renderBoard();updateOnlineTurnClock();
  if(game.ended&&!oldEnd){
-  const win=room.winner===0?'무승부!':room.winner===playerColor?'이겼어요!':'아쉽게 졌어요!';
+  const win=room.winner===0?'무승부!':room.finishReason==='resign'?(room.winner===playerColor?'상대 기권 · 승리!':'기권패'):
+    room.finishReason==='timeout'?(room.winner===playerColor?'상대 시간초과 · 승리!':'시간패'):
+    room.winner===playerColor?'이겼어요!':'아쉽게 졌어요!';
   openDialog({art:room.winner===playerColor?saved.profileAvatar:'bunny',title:win,text:'온라인 베타 대전에는 코인·XP 보상이 없어요.',buttons:[{label:'메인으로',run:()=>{closeDialog();void onlineCall('leave');home()}}]});
  }
 }
@@ -1268,7 +1290,7 @@ function stoneSvg(color){return stoneMarkup(gameStoneId(color))}
 function buildBoard(){const root=$('board');const frag=document.createDocumentFragment();for(let r=0;r<15;r++)for(let c=0;c<15;c++){const cell=document.createElement('button');cell.type='button';cell.className='cell';cell.dataset.r=r;cell.dataset.c=c;cell.setAttribute('role','gridcell');cell.setAttribute('aria-label',`${r+1}행 ${c+1}열`);if([3,7,11].includes(r)&&[3,7,11].includes(c)){const s=document.createElement('span');s.className='star';cell.append(s)}cell.onclick=()=>humanMove(r,c);frag.append(cell)}root.replaceChildren(frag)}
 function renderBoard(){const b=$('board');b.className='board theme-'+saved.theme;$('avatarBlack').innerHTML=stoneSvg(1);$('avatarWhite').innerHTML=stoneSvg(2);$('turnFace').innerHTML=stoneSvg(game.turn);
  $('turnLabel').textContent=game.ended?'대국 종료':game.mode==='online'?((game.turn===game.playerColor?'내':'상대')+' 차례'):(isAITurn()?'부엉이 박사':game.mode==='ai'?saved.nickname:game.turn===1?saved.nickname:sideName(2)+' 친구')+' 차례';
- $('gameModeTip').textContent=game.mode==='online'?(game.serverValidated?'서버 판정 친구 대전 · 코인·XP 없음':'Firebase 베타 · 코인·XP 없음'):game.mode==='ai'?'AI 난이도별 보상 · 무르기 시 0':'한 기기 2인 대전 · 보상 없음';$('playerBlack').classList.toggle('turn',game.turn===1&&!game.ended);$('playerWhite').classList.toggle('turn',game.turn===2&&!game.ended);$('moveCount').textContent=game.history.length+'수';
+ $('gameModeTip').textContent=game.mode==='online'?(game.serverValidated?(game.onlineTurnDeadlineAt?'서버 판정 · 45초 제한 · 코인·XP 없음':'서버 판정 · 코인·XP 없음'):'Firebase 베타 · 코인·XP 없음'):game.mode==='ai'?'AI 난이도별 보상 · 무르기 시 0':'한 기기 2인 대전 · 보상 없음';$('playerBlack').classList.toggle('turn',game.turn===1&&!game.ended);$('playerWhite').classList.toggle('turn',game.turn===2&&!game.ended);$('moveCount').textContent=game.history.length+'수';
  $('undoBtn').disabled=game.mode==='online'||(!pendingMove&&(game.mode==='ai'?game.history.length<(game.playerColor===2?3:2):game.history.length===0))||game.isThinking||game.ended;
  const undoNotice=$('undoRewardNotice');undoNotice.hidden=game.mode!=='ai'||!game.usedUndo;undoNotice.classList.toggle('disqualified',game.mode==='ai'&&game.usedUndo);undoNotice.textContent=game.usedUndo?'이 판은 무르기 사용으로 코인·XP 보상이 0이에요.':'※ 실제 무르기 사용 시 해당 판의 코인·XP 보상은 0이에요.';
  const previewBox=$('moveConfirm');previewBox.hidden=!pendingMove;
@@ -1460,7 +1482,7 @@ $('setupComplete').onclick=()=>{
 };
 $('homePlayer').onclick=()=>display('profile');$('editAvatar').onclick=()=>setupProfile(true);
 
-$('homeGear').onclick=settings;$('homeGearBottom').onclick=settings;$('homeInbox').onclick=()=>openDialog({art:'🌸',title:'말랑 우편함',text:'말랑오목에 오신 것을 환영해요! 캐릭터 하나를 구매하면 흑돌과 백돌이 둘 다 열려요. AI 대전과 꾸미기를 즐겨보세요. 친구 코드 대전과 온라인 랜덤 매칭을 이용해보세요!',buttons:[{label:'확인',run:closeDialog}]});$('profileHomeBtn').onclick=()=>display('profile');$('brandBtn').onclick=home;document.querySelectorAll('[data-home]').forEach(b=>b.onclick=home);$('coinChip').onclick=()=>display('shop');$('levelChip').onclick=()=>display('profile');$('settingBtn').onclick=settings;$('randomBtn').onclick=askOnline;$('twoPlayerBtn').onclick=()=>startGame('local');$('confirmMove').onclick=commitPreview;$('cancelMove').onclick=cancelPreview;$('aiBtn').onclick=pickAI;$('localBtn').onclick=rules;$('shopBtn').onclick=()=>display('shop');$('gameBack').onclick=()=>openDialog({art:'bunny',title:'대국을 나갈까요?',text:game.mode==='online'?'방을 나가면 상대는 계속 기다릴 수 있어요. 온라인 대국 기록은 방에 남아요.':'진행 중인 대국은 저장되지 않아요.',buttons:[{label:'계속 두기',run:closeDialog},{label:'메인으로 나가기',alt:true,run:()=>{closeDialog();home()}}]});$('rulesBtn').onclick=rules;$('resetGameBtn').onclick=()=>{if(game.mode==='online'){toast('온라인 재대국 기능은 다음 버전에 추가할게요.');return}openDialog({art:'🌱',title:'새 대국을 시작할까요?',text:'현재 대국은 초기화되고 보상은 지급되지 않아요.',buttons:[{label:'새 대국 시작',run:()=>{closeDialog();startGame(game.mode,game.difficulty,game.playerColor)}},{label:'계속하기',alt:true,run:closeDialog}]})};$('undoBtn').onclick=undo;$('forbiddenBtn').onclick=()=>{saved.showForbidden=!saved.showForbidden;persist();renderBoard()};$('saveNickname').onclick=()=>{const nick=$('nicknameInput').value.trim();if(!nick){toast('닉네임을 입력해주세요!');return}saved.nickname=nick.slice(0,10);persist();renderProfile();toast('닉네임이 저장됐어요 ♡')};$('toShopFromProfile').onclick=()=>display('shop');$('overlay').addEventListener('click',e=>{if(e.target===$('overlay'))closeDialog()});
+$('homeGear').onclick=settings;$('homeGearBottom').onclick=settings;$('homeInbox').onclick=()=>openDialog({art:'🌸',title:'말랑 우편함',text:'말랑오목에 오신 것을 환영해요! 캐릭터 하나를 구매하면 흑돌과 백돌이 둘 다 열려요. AI 대전과 꾸미기를 즐겨보세요. 친구 코드 대전과 온라인 랜덤 매칭을 이용해보세요!',buttons:[{label:'확인',run:closeDialog}]});$('profileHomeBtn').onclick=()=>display('profile');$('brandBtn').onclick=home;document.querySelectorAll('[data-home]').forEach(b=>b.onclick=home);$('coinChip').onclick=()=>display('shop');$('levelChip').onclick=()=>display('profile');$('settingBtn').onclick=settings;$('randomBtn').onclick=askOnline;$('twoPlayerBtn').onclick=()=>startGame('local');$('confirmMove').onclick=commitPreview;$('cancelMove').onclick=cancelPreview;$('aiBtn').onclick=pickAI;$('localBtn').onclick=rules;$('shopBtn').onclick=()=>display('shop');$('gameBack').onclick=()=>openDialog({art:'bunny',title:'대국을 나갈까요?',text:game.mode==='online'&&!game.ended?(game.serverValidated&&game.onlineTurnDeadlineAt?'지금 나가면 기권패 처리돼요. 새로고침은 기권이 아니며, 제한시간은 계속 흘러요.':'온라인 대국을 나가면 돌아올 수 없어요.'):'진행 중인 대국은 저장되지 않아요.',buttons:[{label:'계속 두기',run:closeDialog},{label:'메인으로 나가기',alt:true,run:()=>{closeDialog();home()}}]});$('rulesBtn').onclick=rules;$('resetGameBtn').onclick=()=>{if(game.mode==='online'){toast('온라인 재대국 기능은 다음 버전에 추가할게요.');return}openDialog({art:'🌱',title:'새 대국을 시작할까요?',text:'현재 대국은 초기화되고 보상은 지급되지 않아요.',buttons:[{label:'새 대국 시작',run:()=>{closeDialog();startGame(game.mode,game.difficulty,game.playerColor)}},{label:'계속하기',alt:true,run:closeDialog}]})};$('undoBtn').onclick=undo;$('forbiddenBtn').onclick=()=>{saved.showForbidden=!saved.showForbidden;persist();renderBoard()};$('saveNickname').onclick=()=>{const nick=$('nicknameInput').value.trim();if(!nick){toast('닉네임을 입력해주세요!');return}saved.nickname=nick.slice(0,10);persist();renderProfile();toast('닉네임이 저장됐어요 ♡')};$('toShopFromProfile').onclick=()=>display('shop');$('overlay').addEventListener('click',e=>{if(e.target===$('overlay'))closeDialog()});
 buildBoard();updateTop();renderShop();renderHome();if(saved.onboarded)display('home');else setupProfile(false);
 window.mallangSocialStoneMarkup=stoneMarkup;
 window.mallangCloudBridge.status('☁ Firebase 연결 중…','connecting');
@@ -1645,7 +1667,7 @@ window.mallangFirebaseRetry=()=>void connect();
 
 // --- Cloudflare authoritative friend-room beta.
 // Paste the deployed Workers URL below. Empty = legacy Firebase room for compatibility.
-const CF_SERVER_URL = 'https://mallang-omok-referee.yeojulgali.workers.dev'; // e.g. https://mallang-omok-referee.<subdomain>.workers.dev
+const CF_SERVER_URL = 'https://mallang-omok-referee-v107-test.yeojulgali.workers.dev'; // e.g. https://mallang-omok-referee.<subdomain>.workers.dev
 const cfBase=CF_SERVER_URL.trim().replace(/\/$/,'');
 // Optional staging Worker for v10.7 testing; leave empty for the production Worker.
 const CF_MATCH_SERVER_URL='https://mallang-omok-referee-v107-test.yeojulgali.workers.dev';
@@ -1823,7 +1845,11 @@ async function leave(){
   cloudMatchRoom=false;
   try{await cloudMatchRequest('cancel')}catch(err){console.warn('기존 랜덤 매칭 기록 정리 실패',err)}
  }
- if(cfCode)cfStop();
+ if(cfCode){
+  // Only explicit leave submits a resignation. Refresh/navigation does not call leave().
+  try{await cfRequest(cfCode,'resign',{});}catch(err){console.warn('기권 서버 반영 실패, 시간제한으로 정리될 수 있어요',err)}
+  cfStop();
+ }
  const oldQueue=onlineQueue;clearMatching();clearRoom();
  if(oldQueue&&uid){try{const ref=queueRef(uid);const snap=await dbApi.getDoc(ref);if(snap.exists()&&snap.data().status==='waiting')await dbApi.deleteDoc(ref)}catch(e){console.warn('매칭 대기 종료',e)}}
 }
@@ -2532,7 +2558,7 @@ function installHooks(){
  const origLeave=game.leave;
  game.leave=async function(...args){leaveTracked();return origLeave.apply(this,args)};
  // Change from local/AI to game or navigate home: clean up old room chat on view changes.
- $('gameBack')?.addEventListener('click',leaveTracked);
+ // Leaving is tracked by the mallangOnline.leave wrapper, not the confirmation click.
  $('brandBtn')?.addEventListener('click',()=>{friendScreen=false;stopWatching();$('socialFriendsView').classList.remove('active');$('spectateView').classList.remove('active')});
 }
 async function start(){
