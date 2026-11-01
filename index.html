@@ -1874,6 +1874,8 @@ const info=(message)=>{const el=$('socialNotice');if(el)el.textContent=message;c
 const fail=(e)=>{console.error('[말랑오목 소셜]',e);info(e?.code==='permission-denied'?'Firestore 소셜 보안 규칙을 적용해야 해요.':(e?.message||'연결 오류가 발생했어요.'))};
 let api=null,db=null,me='',myCode='',connections=[],profiles=new Map(),profileSubs=[],connectionSub=null,heartbeat=null;
 let roomCode='',roomMode='',roomRole='',roomHost='',roomGuest='',roomSub=null,msgSub=null,lastSeenMessage=null,previousRoomHash='',lastWritePromise=Promise.resolve();
+// v10.6.4c: subscribe only after the parent socialRooms document is ready.
+let chatRetryTimer=null,chatRetryCount=0,chatWatchInFlightCode='';
 let viewingCode='',viewSub=null,viewMessagesSub=null,lastChatAt=0,friendScreen=false;
 let duelInviteSub=null,duelInvite=null,duelInviteBusy=false;
 const mySave=()=>window.mallangCloudBridge?.getSave?.()||{};
@@ -2056,7 +2058,12 @@ async function mirrorRoom(room,heartbeatOnly=false){
  try{await lastWritePromise;previousRoomHash=fingerprint}
  catch(e){previousRoomHash='';console.warn('spectator mirror',e);throw e}
 }
-function stopMessages(){if(msgSub){msgSub();msgSub=null}document.getElementById('socialChatReceiveError')?.remove();delete gameChatButton.dataset.chatError;gameChatButton.title='빠른 채팅';roomCode='';lastSeenMessage=null;roomRole='';roomMode='';roomHost='';roomGuest='';lastRoomState=null;previousRoomHash='';$('socialGameChatBtn').hidden=true;$('socialGameChatPanel').hidden=true;clearTimeout(bubbleTimer);bubbleBlack.hidden=true;bubbleWhite.hidden=true}
+function stopMessages(){
+ if(chatRetryTimer){clearTimeout(chatRetryTimer);chatRetryTimer=null;}
+ chatRetryCount=0;chatWatchInFlightCode='';
+ if(msgSub){msgSub();msgSub=null}
+ document.getElementById('socialChatReceiveError')?.remove();delete gameChatButton.dataset.chatError;gameChatButton.title='빠른 채팅';roomCode='';lastSeenMessage=null;roomRole='';roomMode='';roomHost='';roomGuest='';lastRoomState=null;previousRoomHash='';$('socialGameChatBtn').hidden=true;$('socialGameChatPanel').hidden=true;clearTimeout(bubbleTimer);bubbleBlack.hidden=true;bubbleWhite.hidden=true
+}
 // Incoming messages are read from Firestore. Never compare a device-local
 // clock against Firebase's serverTimestamp: skew can hide every remote bubble.
 function showPlayerBubble(msg){
@@ -2085,16 +2092,50 @@ function showChatEntries(snap){
  // Critically, NEVER gate by Date.now() vs Firebase server timestamps.
  showPlayerBubble(msg);
 }
+// Start a listener only when the room document exists and this account is a player.
+// Firestore rules for /socialRooms/{roomCode}/messages check the parent room.
+function scheduleChatReconnect(code){
+ if(roomCode!==code||msgSub||chatRetryTimer||chatRetryCount>=4)return;
+ const ms=Math.min(800*Math.pow(2,chatRetryCount),5000);
+ chatRetryCount++;
+ chatRetryTimer=setTimeout(()=>{chatRetryTimer=null;void connectChatReceiver(code)},ms);
+}
+async function connectChatReceiver(code){
+ if(!api||roomCode!==code||msgSub||chatWatchInFlightCode===code)return;
+ chatWatchInFlightCode=code;
+ try{
+  // mirrorRoom is serialized: wait for the Firestore parent to exist before a subcollection LIST.
+  if(lastRoomState?.code===code)await mirrorRoom(lastRoomState);
+  if(roomCode!==code)return;
+  const doc=await api.getDoc(socialDoc('socialRooms',code));
+  if(!doc.exists())throw Error('채팅용 대국 정보가 아직 준비되지 않았어요.');
+  const state=doc.data();
+  if(![state.hostUid,state.guestUid].includes(me))throw Error('채팅 대국 참가자 정보가 일치하지 않아요.');
+  if(roomCode!==code)return;
+  attachGameChat(code);
+ }catch(e){
+  if(roomCode!==code)return;
+  console.warn('[말랑오목 채팅] 구독 준비 실패',e?.code,e?.message);
+  gameChatButton.title='채팅 연결 재시도 중';
+  scheduleChatReconnect(code);
+  if(chatRetryCount>=4)chatReceiveError(e,code);
+ }finally{
+  if(chatWatchInFlightCode===code)chatWatchInFlightCode='';
+ }
+}
 function chatReceiveError(e,code){
  if(roomCode!==code)return;
  console.warn('[말랑오목 채팅] 실시간 수신 오류',e?.code,e?.message);
  msgSub=null;
+ // A cold-start permission error can occur before the parent document is created.
+ // Retry after the server mirror is ready; do not weaken Firebase security rules.
+ scheduleChatReconnect(code);
+ if(chatRetryCount<4){gameChatButton.title='상대 채팅 연결 재시도 중';return;}
  const text=e?.code==='permission-denied'
-   ?'상대 채팅 수신 권한이 거부됐어요. Firebase 규칙을 확인해주세요.'
+   ?'상대 채팅 수신 권한이 거부됐어요. Firebase의 socialRooms/messages 규칙을 확인해주세요.'
    :'상대 채팅 수신 연결 오류: '+(e?.message||'네트워크를 확인해주세요.');
  gameChatButton.title=text;
  gameChatButton.dataset.chatError='1';
- // The preset panel is normally hidden, so surface the error near the button.
  let hint=document.getElementById('socialChatReceiveError');
  if(!hint){hint=document.createElement('div');hint.id='socialChatReceiveError';hint.setAttribute('role','status');
   hint.style.cssText='position:fixed;z-index:9998;bottom:calc(80px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);width:max-content;max-width:92vw;padding:10px 13px;border-radius:13px;border:2px solid #d7a880;background:#fff8ed;color:#774b33;font-size:12px;font-weight:700;box-shadow:0 6px 20px #0002;';
@@ -2108,10 +2149,14 @@ function attachGameChat(code){
  if(msgSub){msgSub();msgSub=null;}
  roomCode=code;lastSeenMessage=null;
  gameChatButton.title='빠른 채팅';delete gameChatButton.dataset.chatError;
- // A limit(1) listener avoids fetching the entire chat history.
+ // Fetch only the latest message; old history need not be loaded.
  const q=api.query(socialCol('socialRooms',code,'messages'),api.orderBy('createdAt','desc'),api.limit(1));
  msgSub=api.onSnapshot(q,s=>{
    if(roomCode!==code)return;
+   chatRetryCount=0;
+   if(chatRetryTimer){clearTimeout(chatRetryTimer);chatRetryTimer=null;}
+   document.getElementById('socialChatReceiveError')?.remove();
+   gameChatButton.title='빠른 채팅';delete gameChatButton.dataset.chatError;
    try{showChatEntries(s);}catch(e){console.warn('[말랑오목 채팅] 수신 메시지 표시 오류',e);}
  },e=>chatReceiveError(e,code));
 }
@@ -2182,11 +2227,14 @@ function trackRoom(r){
  // arrive immediately (e.g. from local cache), even before the next tick.
  const changedRoom=roomCode!==code;
  if(changedRoom)stopMessages();
+ roomCode=code;
  roomHost=r.hostUid;roomGuest=r.guestUid;roomMode=r.type||'friend';roomRole='player';lastRoomState=r;
- if(changedRoom||!msgSub)attachGameChat(code);
  $('socialGameChatBtn').hidden=false;
  if(r.status==='playing')void markPresence({activeRoom:code});else void markPresence({activeRoom:''});
- void mirrorRoom(r).catch(e=>console.warn('spectator relay pending',e));
+ // Never subscribe before the parent socialRooms document has been saved.
+ // Prior code attached a listener first, causing Firestore permission-denied on the first snapshot.
+ if(!msgSub)void connectChatReceiver(code);
+ else void mirrorRoom(r).catch(e=>console.warn('spectator relay pending',e));
 }
 function leaveTracked(){
  if(!roomCode)return;const endedCode=roomCode;
@@ -2229,7 +2277,7 @@ friendBtn.onclick=()=>void showFriends();$('socialGoHome').onclick=goHome;$('soc
 $('socialAddFriend').onclick=()=>void invite();$('socialFriendInput').addEventListener('keydown',e=>{if(e.key==='Enter')void invite()});
 $('socialShareCode').onclick=()=>void shareMyFriendCode();
 $('socialCopyCode').onclick=()=>{if(!myCode)return;void navigator.clipboard?.writeText(myCode).then(()=>info('친구 코드가 복사됐어요!')).catch(()=>window.prompt('친구 코드',myCode))};
-gameChatButton.onclick=()=>{if(roomCode&&!msgSub&&api)attachGameChat(roomCode);chatPanel.hidden=!chatPanel.hidden;};
+gameChatButton.onclick=()=>{if(roomCode&&!msgSub&&api)void connectChatReceiver(roomCode);chatPanel.hidden=!chatPanel.hidden;};
 for(const b of document.querySelectorAll('[data-game-reaction]'))b.addEventListener('click',()=>void sendMessage('reaction',b.dataset.gameReaction));
 
 window.mallangSocial={showFriends,spectate,sendMessage,stopWatching};
@@ -2242,7 +2290,7 @@ if(sharedCode&&/^[A-HJ-NP-Z2-9]{9}$/.test(sharedCode.toUpperCase())){
 })();
 </script>
 
-<script>/* v10.6.4b height-responsive gomoku board, not a scrolling page */
+<script>/* v10.6.4c height-responsive gomoku board, not a scrolling page */
 (()=>{
   let pending=0,lastSize=0;
   const $=s=>document.querySelector(s);
