@@ -1861,7 +1861,7 @@ window.addEventListener('load',()=>{setTimeout(()=>{
 
 void connect();
 </script>
-<script>/* 말랑오목 v10.6: friends, presence, live spectating, preset chat, reactions.
+<script>/* 말랑오목 v10.6.5: optimized friends, presence, spectating, preset chat.
    Spectator relay is Firebase (read-only viewer), game rules remain on existing referee server.
    Requires the accompanying Firestore security-rule additions. */
 (()=>{'use strict';
@@ -1872,8 +1872,9 @@ const codeAlphabet='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const info=(message)=>{const el=$('socialNotice');if(el)el.textContent=message;console.info('[말랑오목 소셜]',message)};
 const fail=(e)=>{console.error('[말랑오목 소셜]',e);info(e?.code==='permission-denied'?'Firestore 소셜 보안 규칙을 적용해야 해요.':(e?.message||'연결 오류가 발생했어요.'))};
-let api=null,db=null,me='',myCode='',connections=[],profiles=new Map(),profileSubs=[],connectionSub=null,heartbeat=null;
-let roomCode='',roomMode='',roomRole='',roomHost='',roomGuest='',roomSub=null,msgSub=null,lastSeenMessage=null,previousRoomHash='',lastWritePromise=Promise.resolve();
+let api=null,db=null,me='',myCode='',connections=[],profiles=new Map(),profileSubs=new Map(),connectionSub=null,heartbeat=null;
+let profileInitPromise=null,desiredActiveRoom='',lastPresenceRoom=null,lastPresenceAt=0,lastPresenceNick='',lastPresenceAvatar='',presencePending=null;
+let roomCode='',roomMode='',roomRole='',roomHost='',roomGuest='',roomSub=null,msgSub=null,lastSeenMessage=null,previousRoomHash='',lastWritePromise=Promise.resolve(),pendingRoomHash=null,lastMirrorAt=0;
 // v10.6.4c: subscribe only after the parent socialRooms document is ready.
 let chatRetryTimer=null,chatRetryCount=0,chatWatchInFlightCode='';
 let viewingCode='',viewSub=null,viewMessagesSub=null,lastChatAt=0,friendScreen=false;
@@ -1885,7 +1886,7 @@ const socialDoc=(...parts)=>api.doc(db,...parts);
 const socialCol=(...parts)=>api.collection(db,...parts);
 const escapeText=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const friendKey=(a,b)=>[a,b].sort().join('_');
-const isLive=p=>p&&Date.now()-Number(p.lastSeen||0)<90000;
+const isLive=p=>p&&Date.now()-Number(p.lastSeen||0)<300000; // 5 minutes: 120 s heartbeat plus mobile timer tolerance
 function randomCode(length=9){const bytes=crypto.getRandomValues(new Uint8Array(length));return [...bytes].map(n=>codeAlphabet[n%codeAlphabet.length]).join('')}
 const wrap=document.createElement('div');wrap.id='mallangSocialRoot';wrap.innerHTML=`<section id="socialFriendsView" class="view social-view"><div class="social-heading"><button id="socialGoHome" class="backbtn" type="button">← 메인</button><h2>🐾 말랑 친구</h2></div><div class="social-card"><strong>내 친구 코드</strong><div class="social-code"><code id="socialMyCode">연결 중…</code><button id="socialCopyCode" type="button">복사</button><button id="socialShareCode" type="button">공유</button></div><small>코드를 친구에게 알려주면 친구 신청을 받을 수 있어요.</small></div><div class="social-card"><strong>친구 추가</strong><div class="social-code"><input id="socialFriendInput" maxlength="30" placeholder="친구의 코드 9자리" autocomplete="off" spellcheck="false"><button id="socialAddFriend" type="button">신청</button></div><small id="socialNotice" aria-live="polite">친구 신청은 상대가 수락해야 완료돼요.</small></div><div class="social-card"><h3>받은 친구 신청 <span id="socialPendingCount"></span></h3><div id="socialIncoming" class="social-rows"></div></div><div class="social-card"><h3>친구 목록 <span id="socialFriendCount"></span></h3><div id="socialFriendList" class="social-rows"></div><div id="socialOutgoing" class="social-outgoing"></div></div></section><section id="spectateView" class="view social-view"><div class="social-heading"><button class="backbtn" id="socialExitWatch" type="button">← 나가기</button><h2>👀 실시간 관전</h2><span class="soft-tag">착수 불가</span></div><div class="social-card"><div class="social-match-name" id="socialMatchNames">대국 연결 중…</div><div class="social-watch-sub" id="socialWatchStatus">대국 상태를 확인하고 있어요.</div><div class="board-frame social-board-frame"><div class="board" id="socialWatchBoard" role="grid" aria-label="관전용 오목판"></div></div><div class="social-spectator-only">👀 관전 전용 · 착수 및 채팅 불가</div></div></section>`;
 // Main uses .view panels as direct children. Append both panels to the same main.
@@ -1906,32 +1907,53 @@ for (const [bubble,id] of [[bubbleBlack,'playerBlack'],[bubbleWhite,'playerWhite
 let bubbleTimer=null;
 
 async function withInit(){if(api&&me)return;for(let attempt=0;attempt<65;attempt++){const service=window.mallangSocialServices;if(service?.getFirestore?.()&&service?.getUid?.()){api=service.getFirestore();db=api.db;me=service.getUid();return}await sleep(400)}throw Error('Firebase 연결이 준비되지 않았어요. 상단 연결 상태를 확인해 주세요.')}
+// v10.6.5: friend code/profile is initialized once per tab, rather than writing on every friend screen open.
 async function ensureProfile(){
- await withInit();
- const ref=socialDoc('socialProfiles',me);
- await api.setDoc(ref,{uid:me,nickname:myNick(),avatar:myAvatar(),lastSeen:Date.now()}, {merge:true});
- const previous=await api.getDoc(ref);myCode=String(previous.data()?.friendCode||'');
- if(!myCode){
-  let allocated=false;
-  for(let i=0;i<6&&!allocated;i++){
-   const code=randomCode(),lookup=socialDoc('socialCodes',code);
-   try{await api.runTransaction(db,async tx=>{const existing=await tx.get(lookup);if(existing.exists())throw Error('collision');tx.set(lookup,{uid:me});tx.update(ref,{friendCode:code});});myCode=code;allocated=true}
-   catch(e){if(e.message!=='collision')throw e}
+ if(myCode&&api&&me){$('socialMyCode').textContent=myCode;return;}
+ if(profileInitPromise)return profileInitPromise;
+ profileInitPromise=(async()=>{
+  await withInit();
+  const ref=socialDoc('socialProfiles',me);
+  // Keep initial profile creation; the recurring presence writer below is throttled separately.
+  await api.setDoc(ref,{uid:me,nickname:myNick(),avatar:myAvatar(),lastSeen:Date.now()}, {merge:true});
+  const previous=await api.getDoc(ref);myCode=String(previous.data()?.friendCode||'');
+  if(!myCode){
+   let allocated=false;
+   for(let i=0;i<6&&!allocated;i++){
+    const code=randomCode(),lookup=socialDoc('socialCodes',code);
+    try{await api.runTransaction(db,async tx=>{const existing=await tx.get(lookup);if(existing.exists())throw Error('collision');tx.set(lookup,{uid:me});tx.update(ref,{friendCode:code});});myCode=code;allocated=true}
+    catch(e){if(e.message!=='collision')throw e}
+   }
+   if(!allocated)throw Error('친구 코드를 만들지 못했어요. 다시 시도해 주세요.');
   }
-  if(!allocated)throw Error('친구 코드를 만들지 못했어요. 다시 시도해 주세요.');
- }
- $('socialMyCode').textContent=myCode;
+  $('socialMyCode').textContent=myCode;
+ })();
+ try{await profileInitPromise}catch(e){profileInitPromise=null;throw e}
 }
+// v10.6.5: 120 s heartbeat, but changed room/name/avatar is reflected immediately.
+// A single in-flight write is shared, avoiding a race between room updates and timer ticks.
 async function markPresence(extra={}){
  if(!api||!me)return;
- const update={uid:me,nickname:myNick(),avatar:myAvatar(),lastSeen:Date.now(),...extra};
- try{await api.setDoc(socialDoc('socialProfiles',me),update,{merge:true})}catch(e){console.warn('presence',e)}
+ if(typeof extra.activeRoom==='string')desiredActiveRoom=extra.activeRoom;
+ if(presencePending)await presencePending;
+ const now=Date.now(),room=desiredActiveRoom,nickname=myNick(),avatar=myAvatar();
+ if(room===lastPresenceRoom&&nickname===lastPresenceNick&&avatar===lastPresenceAvatar&&now-lastPresenceAt<115000)return;
+ const update={uid:me,nickname,avatar,lastSeen:now,activeRoom:room};
+ const job=api.setDoc(socialDoc('socialProfiles',me),update,{merge:true})
+  .then(()=>{lastPresenceAt=now;lastPresenceRoom=room;lastPresenceNick=nickname;lastPresenceAvatar=avatar})
+  .catch(e=>console.warn('presence',e))
+  .finally(()=>{if(presencePending===job)presencePending=null});
+ presencePending=job;
+ return job;
 }
 function refreshPresence(){
- if(document.visibilityState!=='hidden')void markPresence();
- if(roomCode&&!viewingCode&&roomMode&&roomRole==='player'&&lastRoomState)void mirrorRoom(lastRoomState,true);
+ if(document.visibilityState==='hidden')return; // Don't keep a hidden tab online with a timer.
+ void markPresence();
+ // A 120-second heartbeat keeps quiet rooms available to spectators.
+ if(roomCode&&!viewingCode&&roomMode&&roomRole==='player'&&lastRoomState)
+  void mirrorRoom(lastRoomState,true).catch(e=>console.warn('spectator heartbeat',e));
 }
-function stopProfiles(){for(const x of profileSubs)x();profileSubs=[];profiles.clear()}
+function stopProfiles(){for(const unsub of profileSubs.values())unsub();profileSubs.clear();profiles.clear()}
 function drawFriends(){
  const incoming=$('socialIncoming'),friends=$('socialFriendList'),outgoing=$('socialOutgoing');
  incoming.replaceChildren();friends.replaceChildren();outgoing.replaceChildren();
@@ -1953,13 +1975,23 @@ function drawFriends(){
 function friendRow(title,description){const row=document.createElement('div');row.className='social-row';const txt=document.createElement('div');const s=document.createElement('strong');s.textContent=title;const small=document.createElement('small');small.textContent=description;txt.append(s,small);row.append(txt);return row}
 function socialButton(text,action,secondary=false){const b=document.createElement('button');b.type='button';b.className=secondary?'secondary':'';b.textContent=text;b.addEventListener('click',action);return b}
 function watchFriends(){
- connectionSub?.();stopProfiles();
+ // v10.6.5: reuse the relationship listener even when the friends screen is reopened.
+ if(connectionSub)return;
  const q=api.query(socialCol('socialConnections'),api.where('members','array-contains',me));
  connectionSub=api.onSnapshot(q,snap=>{
   connections=snap.docs.map(d=>({id:d.id,...d.data()})).filter(c=>Array.isArray(c.members)&&c.members.includes(me));
-  stopProfiles();const ids=[...new Set(connections.flatMap(c=>c.members).filter(x=>x!==me))];
-  for(const id of ids){profileSubs.push(api.onSnapshot(socialDoc('socialProfiles',id),sn=>{if(sn.exists())profiles.set(id,sn.data());else profiles.delete(id);drawFriends()},e=>console.warn('friend profile',e)))}
-  drawFriends();
+  const ids=new Set(connections.flatMap(c=>c.members).filter(x=>x!==me));
+  // Incremental diff: don't unsubscribe/resubscribe unchanged friend profiles.
+  for(const [id,unsub] of profileSubs){if(!ids.has(id)){unsub();profileSubs.delete(id);profiles.delete(id)}}
+  for(const id of ids){
+   if(profileSubs.has(id))continue;
+   const unsub=api.onSnapshot(socialDoc('socialProfiles',id),sn=>{
+    if(sn.exists())profiles.set(id,sn.data());else profiles.delete(id);
+    if(friendScreen)drawFriends();
+   },e=>console.warn('friend profile',e));
+   profileSubs.set(id,unsub);
+  }
+  if(friendScreen)drawFriends();
  },fail);
 }
 async function invite(){
@@ -2037,7 +2069,7 @@ document.getElementById('socialDuelInviteAccept').addEventListener('click',()=>v
 document.getElementById('socialDuelInviteReject').addEventListener('click',()=>void handleDuelInvite(false));
 async function showFriends(){
  friendScreen=true;viewingCode='';stopWatching();document.querySelectorAll('main>.view').forEach(v=>v.classList.remove('active'));$('socialFriendsView').classList.add('active');document.body.classList.remove('home-active');window.scrollTo(0,0);
- try{await ensureProfile();if(friendScreen)watchFriends()}catch(e){fail(e)}
+ try{await ensureProfile();if(friendScreen){watchFriends();drawFriends()}}catch(e){fail(e)}
 }
 function goHome(){friendScreen=false;stopWatching();$('socialFriendsView').classList.remove('active');$('spectateView').classList.remove('active');
  const brand=$('brandBtn');brand?.click();if(!$('homeView').classList.contains('active')){$('homeView').classList.add('active');document.body.classList.add('home-active')}
@@ -2047,22 +2079,37 @@ let lastRoomState=null;
 function cleanRoom(room){
  return {code:String(room.code||'').slice(0,12),mode:String(room.type||'friend').slice(0,12),status:['waiting','playing','finished','cancelled'].includes(room.status)?room.status:'playing',hostUid:String(room.hostUid||''),guestUid:String(room.guestUid||''),hostName:String(room.hostName||'말랑 친구').slice(0,10),guestName:String(room.guestName||'말랑 친구').slice(0,10),hostColor:Number(room.hostColor)===2?2:1,hostBlackSkin:String(room.hostBlackSkin||'capybara_black').slice(0,45),hostWhiteSkin:String(room.hostWhiteSkin||'rabbit_white').slice(0,45),guestBlackSkin:String(room.guestBlackSkin||'capybara_black').slice(0,45),guestWhiteSkin:String(room.guestWhiteSkin||'rabbit_white').slice(0,45),moves:Array.isArray(room.moves)?room.moves.filter(n=>Number.isInteger(n)&&n>=0&&n<225).slice(0,225):[],turn:Number(room.turn)===2?2:1,winner:[0,1,2].includes(Number(room.winner))?Number(room.winner):0,serverValidated:room.serverValidated===true};
 }
-async function mirrorRoom(room,heartbeatOnly=false){
+async function mirrorRoom(room,heartbeatOnly=false,forceBootstrap=false){
  if(!api||!room?.code)return;
  const clean=cleanRoom(room);
  if(![clean.hostUid,clean.guestUid].includes(me))return;
+ // v10.6.5: only the player responsible for the last move writes its spectator mirror.
+ // Initial state and quiet-room heartbeat are owned by the host. This avoids
+ // two Firestore writes on each move while preserving the referee as authority.
+ const moves=Array.isArray(clean.moves)?clean.moves:[];
+ const lastColor=moves.length%2===1?1:2;
+ const lastMover=moves.length===0?clean.hostUid:(lastColor===clean.hostColor?clean.hostUid:clean.guestUid);
+ if(!forceBootstrap){
+  if(heartbeatOnly){
+   if(me!==clean.hostUid || Date.now()-lastMirrorAt<110000)return;
+  }else if(me!==lastMover)return;
+ }
  const fingerprint=JSON.stringify(clean);
+ if(fingerprint===pendingRoomHash)return lastWritePromise;
  if(fingerprint===previousRoomHash&&!heartbeatOnly)return;
- // Only mark a state as mirrored AFTER Firestore accepts it. Failed writes must be retried.
- lastWritePromise=lastWritePromise.catch(()=>{}).then(()=>api.setDoc(socialDoc('socialRooms',clean.code),{...clean,updatedMs:Date.now()}, {merge:true}));
- try{await lastWritePromise;previousRoomHash=fingerprint}
+ pendingRoomHash=fingerprint;
+ // Serialize writes to prevent an earlier snapshot from overwriting a newer one in this tab.
+ const job=lastWritePromise.catch(()=>{}).then(()=>api.setDoc(socialDoc('socialRooms',clean.code),{...clean,updatedMs:Date.now()}, {merge:true}));
+ lastWritePromise=job;
+ try{await job;previousRoomHash=fingerprint;lastMirrorAt=Date.now()}
  catch(e){previousRoomHash='';console.warn('spectator mirror',e);throw e}
+ finally{if(pendingRoomHash===fingerprint)pendingRoomHash=null}
 }
 function stopMessages(){
  if(chatRetryTimer){clearTimeout(chatRetryTimer);chatRetryTimer=null;}
  chatRetryCount=0;chatWatchInFlightCode='';
  if(msgSub){msgSub();msgSub=null}
- document.getElementById('socialChatReceiveError')?.remove();delete gameChatButton.dataset.chatError;gameChatButton.title='빠른 채팅';roomCode='';lastSeenMessage=null;roomRole='';roomMode='';roomHost='';roomGuest='';lastRoomState=null;previousRoomHash='';$('socialGameChatBtn').hidden=true;$('socialGameChatPanel').hidden=true;clearTimeout(bubbleTimer);bubbleBlack.hidden=true;bubbleWhite.hidden=true
+ document.getElementById('socialChatReceiveError')?.remove();delete gameChatButton.dataset.chatError;gameChatButton.title='빠른 채팅';roomCode='';lastSeenMessage=null;roomRole='';roomMode='';roomHost='';roomGuest='';lastRoomState=null;previousRoomHash='';pendingRoomHash=null;lastMirrorAt=0;$('socialGameChatBtn').hidden=true;$('socialGameChatPanel').hidden=true;clearTimeout(bubbleTimer);bubbleBlack.hidden=true;bubbleWhite.hidden=true
 }
 // Incoming messages are read from Firestore. Never compare a device-local
 // clock against Firebase's serverTimestamp: skew can hide every remote bubble.
@@ -2107,7 +2154,13 @@ async function connectChatReceiver(code){
   // mirrorRoom is serialized: wait for the Firestore parent to exist before a subcollection LIST.
   if(lastRoomState?.code===code)await mirrorRoom(lastRoomState);
   if(roomCode!==code)return;
-  const doc=await api.getDoc(socialDoc('socialRooms',code));
+  let doc=await api.getDoc(socialDoc('socialRooms',code));
+  // If the chosen mirroring player is temporarily unavailable, let the other
+  // confirmed participant bootstrap the parent ONCE so chat can connect.
+  if(!doc.exists()&&lastRoomState?.code===code){
+   await mirrorRoom(lastRoomState,false,true);
+   doc=await api.getDoc(socialDoc('socialRooms',code));
+  }
   if(!doc.exists())throw Error('채팅용 대국 정보가 아직 준비되지 않았어요.');
   const state=doc.data();
   if(![state.hostUid,state.guestUid].includes(me))throw Error('채팅 대국 참가자 정보가 일치하지 않아요.');
@@ -2171,14 +2224,20 @@ async function sendMessage(kind,text){
   // The parent spectator room is created asynchronously when the game starts.
   // Ensure it exists before checking permissions or writing its message subcollection.
   await lastWritePromise.catch(()=>{});
-  const ref=socialDoc('socialRooms',code);
-  let snap=await api.getDoc(ref);
-  if(!snap.exists()&&lastRoomState?.code===code){
-   await mirrorRoom(lastRoomState);
-   snap=await api.getDoc(ref);
+  // Once the message listener is active, the parent room and participant check
+  // have already succeeded; avoid a charged getDoc on every preset message.
+  let r=msgSub&&lastRoomState?.code===code?lastRoomState:null;
+  if(!r){
+   const ref=socialDoc('socialRooms',code);
+   let snap=await api.getDoc(ref);
+   if(!snap.exists()&&lastRoomState?.code===code){
+    await mirrorRoom(lastRoomState);
+    snap=await api.getDoc(ref);
+   }
+   if(!snap.exists())throw Error('빠른 채팅용 대국 정보가 아직 저장되지 않았어요. 잠시 후 다시 시도해주세요.');
+   r=snap.data();
   }
-  if(!snap.exists())throw Error('빠른 채팅용 대국 정보가 아직 저장되지 않았어요. 잠시 후 다시 시도해주세요.');
-  const r=snap.data();if(![r.hostUid,r.guestUid].includes(me))throw Error('대국 참가자만 빠른 채팅을 보낼 수 있어요.');
+  if(![r.hostUid,r.guestUid].includes(me))throw Error('대국 참가자만 빠른 채팅을 보낼 수 있어요.');
   if(r.status!=='playing')throw Error('진행 중인 대국에서만 보낼 수 있어요.');
   const result=await api.addDoc(socialCol('socialRooms',code,'messages'),{senderUid:me,senderName:myNick(),kind,text,createdAt:api.serverTimestamp()});
   lastChatAt=Date.now();chatPanel.hidden=true;
@@ -2211,7 +2270,7 @@ async function spectate(code){
  try{
   await withInit();const id=String(code||'').toUpperCase();if(!/^[A-Z2-9]{6}$/.test(id))throw Error('잘못된 관전 방 코드예요.');
   const ref=socialDoc('socialRooms',id),snapshot=await api.getDoc(ref);if(!snapshot.exists())throw Error('관전 가능한 대국을 찾지 못했어요.');
-  if(Date.now()-Number(snapshot.data().updatedMs||0)>110000)throw Error('대국 정보가 오래됐어요. 현재 진행 중인 대국이 아닐 수 있어요.');
+  if(Date.now()-Number(snapshot.data().updatedMs||0)>300000)throw Error('대국 정보가 오래됐어요. 현재 진행 중인 대국이 아닐 수 있어요.');
   if(!['playing','finished'].includes(snapshot.data().status))throw Error('지금은 관전할 수 없는 대국이에요.');
   stopWatching();viewingCode=id;lastSeenMessage=null;document.querySelectorAll('main>.view').forEach(v=>v.classList.remove('active'));$('spectateView').classList.add('active');document.body.classList.remove('home-active');
   const watchId=id;
@@ -2269,7 +2328,9 @@ function installHooks(){
  $('brandBtn')?.addEventListener('click',()=>{friendScreen=false;stopWatching();$('socialFriendsView').classList.remove('active');$('spectateView').classList.remove('active')});
 }
 async function start(){
- try{await ensureProfile();watchFriends();installHooks();watchDuelInvites();await markPresence({activeRoom:''});heartbeat=setInterval(refreshPresence,30000);document.addEventListener('visibilitychange',refreshPresence);
+ try{await ensureProfile();watchFriends();installHooks();watchDuelInvites();await markPresence({activeRoom:''});heartbeat=setInterval(refreshPresence,120000);document.addEventListener('visibilitychange',refreshPresence);
+ // UI-only timer detects disconnected friends after 5 minutes without a database read/write.
+ setInterval(()=>{if(friendScreen)drawFriends()},30000);
  // Some initial renders can start before Firebase is ready; friend screen remains retryable.
  }catch(e){console.warn('social startup',e);info('친구 기능 연결을 확인해 주세요. 홈의 친구 버튼으로 다시 시도할 수 있어요.')}
 }
