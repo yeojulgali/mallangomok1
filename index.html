@@ -2056,8 +2056,9 @@ async function mirrorRoom(room,heartbeatOnly=false){
  try{await lastWritePromise;previousRoomHash=fingerprint}
  catch(e){previousRoomHash='';console.warn('spectator mirror',e);throw e}
 }
-function stopMessages(){if(msgSub){msgSub();msgSub=null}roomCode='';lastSeenMessage=null;roomRole='';roomMode='';roomHost='';roomGuest='';lastRoomState=null;previousRoomHash='';$('socialGameChatBtn').hidden=true;$('socialGameChatPanel').hidden=true;clearTimeout(bubbleTimer);bubbleBlack.hidden=true;bubbleWhite.hidden=true}
-let chatSubscribedAt=0;
+function stopMessages(){if(msgSub){msgSub();msgSub=null}document.getElementById('socialChatReceiveError')?.remove();delete gameChatButton.dataset.chatError;gameChatButton.title='빠른 채팅';roomCode='';lastSeenMessage=null;roomRole='';roomMode='';roomHost='';roomGuest='';lastRoomState=null;previousRoomHash='';$('socialGameChatBtn').hidden=true;$('socialGameChatPanel').hidden=true;clearTimeout(bubbleTimer);bubbleBlack.hidden=true;bubbleWhite.hidden=true}
+// Incoming messages are read from Firestore. Never compare a device-local
+// clock against Firebase's serverTimestamp: skew can hide every remote bubble.
 function showPlayerBubble(msg){
  if(msg.kind==='chat'&&!presets.includes(msg.text))return;
  if(msg.kind==='reaction'&&!reactions.includes(msg.text))return;
@@ -2068,25 +2069,51 @@ function showPlayerBubble(msg){
  bubble.textContent=msg.text;bubble.hidden=false;
  clearTimeout(bubbleTimer);bubbleTimer=setTimeout(()=>{bubbleBlack.hidden=true;bubbleWhite.hidden=true},3600);
 }
-function showChatEntries(snap,targetId,role){
- if(role!=='player')return;
+function showChatEntries(snap){
+ if(roomRole!=='player')return;
  const newest=snap.docs[0];
- if(!newest)return; // The first empty snapshot is normal: do NOT skip the next (first) chat.
+ if(!newest)return; // Empty on first subscription is normal.
  if(lastSeenMessage===newest.id)return;
- lastSeenMessage=newest.id;
  const msg=newest.data();
- // Suppress old history on entry, but never swallow a new first message.
- const sentAt=msg.createdAt?.toMillis?.()||Date.now();
- if(sentAt<chatSubscribedAt-4000)return;
+ lastSeenMessage=newest.id;
+ if(!msg || ![roomHost,roomGuest].includes(msg.senderUid)){
+   console.warn('[말랑오목 채팅] 참가자 UID와 메시지 발신자가 일치하지 않아요.');
+   return;
+ }
+ // Show the newest message even on the first snapshot: messages may arrive
+ // while the listener connects. Old history is a harmless 3.6 s bubble.
+ // Critically, NEVER gate by Date.now() vs Firebase server timestamps.
  showPlayerBubble(msg);
 }
-function attachGameChat(code){if(roomCode===code&&msgSub)return;msgSub?.();roomCode=code;lastSeenMessage=null;chatSubscribedAt=Date.now();
- // Only the latest message is needed for short-lived speech bubbles.
+function chatReceiveError(e,code){
+ if(roomCode!==code)return;
+ console.warn('[말랑오목 채팅] 실시간 수신 오류',e?.code,e?.message);
+ msgSub=null;
+ const text=e?.code==='permission-denied'
+   ?'상대 채팅 수신 권한이 거부됐어요. Firebase 규칙을 확인해주세요.'
+   :'상대 채팅 수신 연결 오류: '+(e?.message||'네트워크를 확인해주세요.');
+ gameChatButton.title=text;
+ gameChatButton.dataset.chatError='1';
+ // The preset panel is normally hidden, so surface the error near the button.
+ let hint=document.getElementById('socialChatReceiveError');
+ if(!hint){hint=document.createElement('div');hint.id='socialChatReceiveError';hint.setAttribute('role','status');
+  hint.style.cssText='position:fixed;z-index:9998;bottom:calc(80px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);width:max-content;max-width:92vw;padding:10px 13px;border-radius:13px;border:2px solid #d7a880;background:#fff8ed;color:#774b33;font-size:12px;font-weight:700;box-shadow:0 6px 20px #0002;';
+  document.body.append(hint);}
+ hint.textContent=text;
+ clearTimeout(chatReceiveError.noticeTimer);
+ chatReceiveError.noticeTimer=setTimeout(()=>hint.remove(),9000);
+}
+function attachGameChat(code){
+ if(roomCode===code&&msgSub)return;
+ if(msgSub){msgSub();msgSub=null;}
+ roomCode=code;lastSeenMessage=null;
+ gameChatButton.title='빠른 채팅';delete gameChatButton.dataset.chatError;
+ // A limit(1) listener avoids fetching the entire chat history.
  const q=api.query(socialCol('socialRooms',code,'messages'),api.orderBy('createdAt','desc'),api.limit(1));
- msgSub=api.onSnapshot(q,s=>showChatEntries(s,'socialGameChatStream','player'),e=>{
-  console.warn('quick chat subscription',e);
-  if(roomCode===code){const hint=document.createElement('small');hint.textContent=e?.code==='permission-denied'?'빠른 채팅 권한이 거부됐어요. Firebase 규칙을 확인해주세요.':'빠른 채팅 연결 오류: '+(e?.message||'알 수 없음');chatPanel.append(hint);setTimeout(()=>hint.remove(),6000)}
- });
+ msgSub=api.onSnapshot(q,s=>{
+   if(roomCode!==code)return;
+   try{showChatEntries(s);}catch(e){console.warn('[말랑오목 채팅] 수신 메시지 표시 오류',e);}
+ },e=>chatReceiveError(e,code));
 }
 async function sendMessage(kind,text){
  try{
@@ -2151,8 +2178,12 @@ function trackRoom(r){
  if(!api||!me||!r?.code)return;
  if(![r.hostUid,r.guestUid].includes(me))return;
  const code=r.code;
- if(roomCode!==code){stopMessages();attachGameChat(code)}
+ // Set participants BEFORE subscribing. The initial Firestore snapshot can
+ // arrive immediately (e.g. from local cache), even before the next tick.
+ const changedRoom=roomCode!==code;
+ if(changedRoom)stopMessages();
  roomHost=r.hostUid;roomGuest=r.guestUid;roomMode=r.type||'friend';roomRole='player';lastRoomState=r;
+ if(changedRoom||!msgSub)attachGameChat(code);
  $('socialGameChatBtn').hidden=false;
  if(r.status==='playing')void markPresence({activeRoom:code});else void markPresence({activeRoom:''});
  void mirrorRoom(r).catch(e=>console.warn('spectator relay pending',e));
@@ -2198,7 +2229,7 @@ friendBtn.onclick=()=>void showFriends();$('socialGoHome').onclick=goHome;$('soc
 $('socialAddFriend').onclick=()=>void invite();$('socialFriendInput').addEventListener('keydown',e=>{if(e.key==='Enter')void invite()});
 $('socialShareCode').onclick=()=>void shareMyFriendCode();
 $('socialCopyCode').onclick=()=>{if(!myCode)return;void navigator.clipboard?.writeText(myCode).then(()=>info('친구 코드가 복사됐어요!')).catch(()=>window.prompt('친구 코드',myCode))};
-gameChatButton.onclick=()=>{chatPanel.hidden=!chatPanel.hidden;};
+gameChatButton.onclick=()=>{if(roomCode&&!msgSub&&api)attachGameChat(roomCode);chatPanel.hidden=!chatPanel.hidden;};
 for(const b of document.querySelectorAll('[data-game-reaction]'))b.addEventListener('click',()=>void sendMessage('reaction',b.dataset.gameReaction));
 
 window.mallangSocial={showFriends,spectate,sendMessage,stopWatching};
@@ -2211,7 +2242,7 @@ if(sharedCode&&/^[A-HJ-NP-Z2-9]{9}$/.test(sharedCode.toUpperCase())){
 })();
 </script>
 
-<script>/* v10.6.3 height-responsive gomoku board, not a scrolling page */
+<script>/* v10.6.4b height-responsive gomoku board, not a scrolling page */
 (()=>{
   let pending=0,lastSize=0;
   const $=s=>document.querySelector(s);
